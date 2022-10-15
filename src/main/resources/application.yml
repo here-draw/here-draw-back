@@ -1,0 +1,19 @@
+### Default ###
+spring:
+  application:
+    name: heredraw
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  profiles:
+    active: local
+   
+logging:
+  level:
+    com:
+      amazonaws:
+        util:
+          EC2MetadataUtils: ERROR
