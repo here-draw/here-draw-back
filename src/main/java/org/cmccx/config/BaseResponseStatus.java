@@ -18,10 +18,7 @@ public enum BaseResponseStatus {
      */
     // Common
     VALIDATION_ERROR(false, 2000, ""),
-    NOT_SUPPORTED_METHOD(false, 2010, ""),
-    ACCESS_DENIED(false, 2011, ""),
-    ILLEGAL_ACCESS(false, 2012, ""),
-    BAD_REQUEST(false, 2013, ""),
+    BAD_REQUEST(false, 2010, "잘못된 요청입니다."),
 
     EMPTY_JWT(false, 2001, "JWT를 입력해주세요."),
     INVALID_JWT(false, 2002, "유효하지 않은 JWT입니다."),
@@ -46,7 +43,6 @@ public enum BaseResponseStatus {
     DUPLICATED_EMAIL(false, 3013, "중복된 이메일입니다."),
     FAILED_TO_LOGIN(false,3014,"없는 아이디거나 비밀번호가 틀렸습니다."),
 
-    FAIL_GET_ARTS(false, 3501, "작품 목록 조회에 실해하였습니다."),
 
 
 

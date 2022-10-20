@@ -1,5 +1,7 @@
 package org.cmccx.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -12,10 +14,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 
+import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
+
 
 @ControllerAdvice
 @ResponseBody
 public class ExceptionController {
+
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @ExceptionHandler(BaseException.class)
     protected BaseResponse handleBaseException(BaseException e){
@@ -47,31 +53,35 @@ public class ExceptionController {
     // 데이터 타입 불일치로 인한 바인딩 에러 처리
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     protected BaseResponse handleValidException(MethodArgumentTypeMismatchException e){
-        return new BaseResponse(BaseResponseStatus.VALIDATION_ERROR, "잘못된 데이터를 입력하였습니다.");
+        logger.error(e.getMessage());
+        return new BaseResponse(BAD_REQUEST);
     }
 
     // 지원하지 않는 HTTP 메소드 호출 시 에러 처리
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected BaseResponse handleValidException(HttpRequestMethodNotSupportedException e) {
-        return new BaseResponse(BaseResponseStatus.NOT_SUPPORTED_METHOD, e.getMessage());
+        logger.error(e.getMessage());
+        return new BaseResponse(BAD_REQUEST);
     }
 
     //Authentication 권한이 없는 경우 발생 시 에러 처리(security에서 발생시킴)
     @ExceptionHandler(AccessDeniedException.class)
     protected BaseResponse handleValidException(AccessDeniedException e){
-        return new BaseResponse(BaseResponseStatus.ACCESS_DENIED, e.getMessage());
+        logger.error(e.getMessage());
+        return new BaseResponse(BAD_REQUEST);
     }
 
     // 접근할 수 없는 메소드 호출 발생 시 에러 처리
     @ExceptionHandler(IllegalAccessException.class)
     protected BaseResponse handleValidException(IllegalAccessException e){
-        return new BaseResponse(BaseResponseStatus.ILLEGAL_ACCESS, e.getMessage());
+        logger.error(e.getMessage());
+        return new BaseResponse(BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     protected BaseResponse handelException(Exception e){
-        e.printStackTrace();
-        return new BaseResponse(BaseResponseStatus.BAD_REQUEST, e.getMessage());
+        logger.error(e.getMessage());
+        return new BaseResponse(BAD_REQUEST);
     }
 
 }
