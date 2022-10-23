@@ -83,9 +83,10 @@ buildNumber.properties
 /logs
 
 # ignore secret
-/src/main/java/org/cmccx/config/secret/Secret.java
+/src/main/java/com/example/demo/config/secret/Secret.java
 
 # ignore profile files
 /src/main/resources/application-dev.yml
 /src/main/resources/application-local.yml
 /src/main/resources/application-prod.yml
+
