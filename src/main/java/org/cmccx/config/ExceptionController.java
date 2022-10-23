@@ -15,6 +15,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.List;
 
 import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
+import static org.cmccx.config.BaseResponseStatus.SERVER_ERROR;
+
 
 
 @ControllerAdvice
@@ -71,17 +73,18 @@ public class ExceptionController {
         return new BaseResponse(BAD_REQUEST);
     }
 
-    // 접근할 수 없는 메소드 호출 발생 시 에러 처리
+    // 접근할 수 없는 호출 발생 시 에러 처리
     @ExceptionHandler(IllegalAccessException.class)
     protected BaseResponse handleValidException(IllegalAccessException e){
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
     }
 
+    // 그 외 에러 처리
     @ExceptionHandler(Exception.class)
     protected BaseResponse handelException(Exception e){
-        logger.error(e.getMessage());
-        return new BaseResponse(BAD_REQUEST);
+        logger.error("Error has occurred", e);
+        return new BaseResponse(SERVER_ERROR);
     }
 
 }
