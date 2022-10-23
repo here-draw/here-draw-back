@@ -20,7 +20,7 @@ public class BaseResponse<T> {
     private T result;
 
 
-    // 요청 성공 후, 반환 데이터가 있는 경우
+    // 요청에 성공한 경우
     public BaseResponse(T result) {
         this.isSuccess = BaseResponseStatus.SUCCESS.isSuccess();
         this.message = BaseResponseStatus.SUCCESS.getMessage();
@@ -28,14 +28,14 @@ public class BaseResponse<T> {
         this.result = result;
     }
 
-    // 상태 코드만 보내는 경우
+    // 요청에 실패한 경우
     public BaseResponse(BaseResponseStatus status) {
         this.isSuccess = status.isSuccess();
         this.message = status.getMessage();
         this.code = status.getCode();
     }
 
-    // Validation 실패한 경우 또는 메세지를 동적으로 생성하는 경우
+    // Validation 실패한 경우
     public BaseResponse(BaseResponseStatus status, String message) {
         this.isSuccess = status.isSuccess();
         this.message = message;
