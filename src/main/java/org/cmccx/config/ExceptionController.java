@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
-import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
-import static org.cmccx.config.BaseResponseStatus.SERVER_ERROR;
-
+import static org.cmccx.config.BaseResponseStatus.*;
 
 
 @ControllerAdvice
@@ -27,6 +26,11 @@ public class ExceptionController {
 
     @ExceptionHandler(BaseException.class)
     protected BaseResponse handleBaseException(BaseException e){
+        int[] errCode = new int[]{/*동적으로 메세지를 줄 에러코드 입력*/};
+
+        if (IntStream.of(errCode).anyMatch(x -> x == e.getStatus().getCode())){
+            return new BaseResponse<>(e.getStatus(), e.getMessage());
+        }
         return new BaseResponse<>(e.getStatus());
     }
 
@@ -38,7 +42,7 @@ public class ExceptionController {
         // 첫번째 에러 메세지
         String message = errors.get(0).getDefaultMessage();
 
-        return new BaseResponse(BaseResponseStatus.VALIDATION_ERROR, message);
+        return new BaseResponse(VALIDATION_ERROR, message);
     }
 
     // @ModelAttribute 바인딩 에러 처리
@@ -49,33 +53,33 @@ public class ExceptionController {
         // 첫번째 에러 메세지
         String message = errors.get(0).getDefaultMessage();
 
-        return new BaseResponse(BaseResponseStatus.VALIDATION_ERROR, message);
+        return new BaseResponse(VALIDATION_ERROR, message);
     }
 
     // 데이터 타입 불일치로 인한 바인딩 에러 처리
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    protected BaseResponse handleValidException(MethodArgumentTypeMismatchException e){
+    protected BaseResponse handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e){
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
     }
 
     // 지원하지 않는 HTTP 메소드 호출 시 에러 처리
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    protected BaseResponse handleValidException(HttpRequestMethodNotSupportedException e) {
+    protected BaseResponse handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
     }
 
     //Authentication 권한이 없는 경우 발생 시 에러 처리(security에서 발생시킴)
     @ExceptionHandler(AccessDeniedException.class)
-    protected BaseResponse handleValidException(AccessDeniedException e){
+    protected BaseResponse handleAccessDeniedException(AccessDeniedException e){
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
     }
 
     // 접근할 수 없는 호출 발생 시 에러 처리
     @ExceptionHandler(IllegalAccessException.class)
-    protected BaseResponse handleValidException(IllegalAccessException e){
+    protected BaseResponse handleIllegalAccessException(IllegalAccessException e){
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
     }

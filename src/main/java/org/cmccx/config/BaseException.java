@@ -1,12 +1,18 @@
 package org.cmccx.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
-@AllArgsConstructor
 public class BaseException extends Exception {
     private BaseResponseStatus status;
+    private String message;
+
+    public BaseException(BaseResponseStatus status){
+        this.status = status;
+    }
+
+    public BaseException(BaseResponseStatus status, String message){
+        this.status = status;
+        this.message = message;
+    }
 }
