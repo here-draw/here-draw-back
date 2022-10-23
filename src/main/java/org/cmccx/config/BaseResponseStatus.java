@@ -11,6 +11,7 @@ public enum BaseResponseStatus {
      * 1000 : 요청 성공
      */
     SUCCESS(true, 1000, "요청에 성공하였습니다."),
+    DELETE_SUCCESS(true, 1003, "삭제되었습니다."),
 
 
     /**
@@ -50,7 +51,7 @@ public enum BaseResponseStatus {
      * 4000 : Database, Server 오류
      */
     DATABASE_ERROR(false, 4000, "데이터베이스 연결에 실패하였습니다."),
-    SERVER_ERROR(false, 4001, "서버와의 연결에 실패하였습니다."),
+    SERVER_ERROR(false, 4001, "알 수 없는 오류가 발생하였습니다."),
 
     S3_UPLOAD_ERROR(false, 4005, "S3 파일 업로드에 실패하였습니다."),
     S3_UPDATE_ERROR(false, 4006, "S3 파일 업데이트에 실패하였습니다."),
