@@ -34,6 +34,10 @@ public enum BaseResponseStatus {
     POST_USERS_EXISTS_EMAIL(false,2017,"중복된 이메일입니다."),
 
 
+    // mieczy
+    DUPLICATED_ARTIST_TITLE(false, 2501, "이미 등록된 작품 제목입니다."),
+    INVALID_IMAGE_FILE(false, 2502, "이미지 파일만 업로드 가능합니다."),
+
 
     /**
      * 3000 : Response 오류
