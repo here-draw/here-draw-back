@@ -1,17 +1,22 @@
 package org.cmccx.src.user;
 
-import org.cmccx.config.BaseException;
+import org.cmccx.src.user.model.*;
+
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.cmccx.utils.S3Service;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import org.cmccx.config.BaseResponse;
+import org.cmccx.config.BaseException;
+import static org.cmccx.config.BaseResponseStatus.*;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -53,22 +58,36 @@ public class UserController {
     }
 
     /**
-     * Amazon S3에 이미지 업로드
+     * Amazon S3에 이미지 업로드 테스트
      * @return 성공 시 200 Success와 함께 업로드 된 파일의 파일명 리스트 반환
      */
-    /*
-    @ApiOperation(value = "Amazon S3에 이미지 업로드", notes = "Amazon S3에 이미지 업로드 ")
-    @PostMapping("/image")
-    public ResponseEntity<List<String>> uploadImage(@ApiParam(value="img 파일들(여러 파일 업로드 가능)", required = true) @RequestPart List<MultipartFile> multipartFile) {
-        return ApiResponse.success(awsS3Service.uploadImage(multipartFile));
-    }
-    */
     @PostMapping("/image")
     public BaseResponse<String> uploadFile(@RequestParam("images") MultipartFile multipartFile) {
         try{
             return new BaseResponse<>(s3Service.uploadImage(multipartFile));
         } catch (BaseException exception){
             return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 카카오로 로그인 API
+     * [POST] /users/kakao
+     * @return BaseResponse<PostLoginRes>
+     */
+    @ResponseBody
+    @PostMapping("/kakao")
+    public BaseResponse<PostLoginRes> loginByKakao(@RequestBody @Valid PostLoginReq kakaoToken) throws BaseException {
+        try {
+            String accessToken = kakaoToken.getAccessToken();
+            PostLoginRes loginRes = userService.loginByKakao(accessToken);
+
+            return new BaseResponse<>(loginRes);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch(Exception e) {
+            logger.error("LoginByKakao Error", e);
+            throw new BaseException(RESPONSE_ERROR);
         }
     }
 }
