@@ -66,13 +66,13 @@ public class ArtService {
             long artId = artDao.insertArt(userId, postArtReq);
 
             // 파일 유형 저장
-            int result = artDao.insertFiletype(artId, postArtReq.getFiletype());
+            int result = artDao.insertFiletype(artId, postArtReq.getFiletypeId());
             if (result < postArtReq.getFiletype().size()) {
                 throw new BaseException(DATABASE_ERROR);
             }
 
             // 허용 범위 저장
-            result = artDao.insertCopyright(artId, postArtReq.getCopyright());
+            result = artDao.insertCopyright(artId, postArtReq.getCopyrightId());
             if (result < postArtReq.getCopyright().size()) {
                 throw new BaseException(DATABASE_ERROR);
             }
@@ -144,14 +144,14 @@ public class ArtService {
 
             // 파일 유형 저장
             result = artDao.deleteFiletype(artId);
-            result = artDao.insertFiletype(artId, putArtReq.getFiletype());
+            result = artDao.insertFiletype(artId, putArtReq.getFiletypeId());
             if (result < putArtReq.getFiletype().size()){
                 throw new BaseException(DATABASE_ERROR);
             }
 
             // 허용 범위 저장
             result = artDao.deleteCopyright(artId);
-            result = artDao.insertCopyright(artId, putArtReq.getCopyright());
+            result = artDao.insertCopyright(artId, putArtReq.getCopyrightId());
             if (result < putArtReq.getCopyright().size()){
                 throw new BaseException(DATABASE_ERROR);
             }
