@@ -42,7 +42,7 @@ public class ArtService {
         String artImageUrl = null;
         try {
             // 회원 검증 및 ID 추출
-            long userId = jwtService.getUserIdx();
+            long userId = jwtService.getUserId();
 
             // 작품명 중복 검사
             int isDuplicated = artProvider.checkArtTitle(userId, postArtReq.getTitle(), 0);
@@ -79,7 +79,7 @@ public class ArtService {
 
             // 태그 저장
             List<String> tags = postArtReq.getTags();
-            if (tags != null || !tags.isEmpty()) {
+            if (tags != null && !tags.isEmpty()) {
                 List<Long> tagId = artDao.insertTag(tags);
 
                 // 작품 해시태그 저장
@@ -107,7 +107,7 @@ public class ArtService {
         String artImageUrl = null;
         try {
             // 회원 검증 및 ID 추출
-            long userId = jwtService.getUserIdx();
+            long userId = jwtService.getUserId();
 
             // 작가-작품 관계 확인
             int isValid = artProvider.checkUserArt(userId, artId);
@@ -159,7 +159,7 @@ public class ArtService {
             // 태그 저장
             result = artDao.deleteArtTag(artId);
             List<String> tags = putArtReq.getTags();
-            if (tags != null || !tags.isEmpty()){
+            if (tags != null && !tags.isEmpty()){
                 List<Long> tagId = artDao.insertTag(tags);
 
                 // 작품 해시태그 저장
@@ -185,16 +185,17 @@ public class ArtService {
     }
 
     /** 작품 삭제 **/
-    public boolean removeArt(long artId) throws BaseException {
+    public String removeArt(long artId) throws BaseException {
         try {
             // 회원ID 추출
-            long userId = jwtService.getUserIdx();
+            long userId = jwtService.getUserId();
 
             int result = artDao.deleteArt(userId, artId);
             if (result == 0){
                 throw new BaseException(BAD_REQUEST);
             }
-            return true;
+            String message = "삭제되었습니다.";
+            return message;
 
         } catch (BaseException e){
             throw new BaseException(e.getStatus());
@@ -202,8 +203,6 @@ public class ArtService {
             logger.error("DeleteArt Error", e);
             throw new BaseException(DATABASE_ERROR);
         }
-
     }
-
 
 }
