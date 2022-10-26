@@ -2,6 +2,7 @@ package org.cmccx.src.art.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cmccx.config.Constant;
 
 import javax.validation.constraints.*;
 import java.util.List;
@@ -33,7 +34,7 @@ public class PutArtReq {
 
     @NotNull(message = "허용 범위를 선택하세요.")
     @Size(min = 1,message = "허용 범위를 선택하세요.")
-    private List<@Min(value = 1, message = "유효하지 않은 허용범위입니다.") @Max(value = 4, message = "유효하지 않은 허용범위입니다.") Integer> copyright;
+    private List<String> copyright;
 
     @NotBlank(message = "작품 설명을 입력하세요.")
     @Size(min = 1, max = 1000, message = "작품 설명은 최소 1글자, 최대 1000글자까지 입력 가능합니다.")
@@ -41,11 +42,10 @@ public class PutArtReq {
 
     @NotNull(message = "파일 유형을 선택하세요.")
     @Size(min = 1,message = "파일 유형을 선택하세요.")
-    private List<@Min(value = 1, message = "유효하지 않은 파일유형입니다.") @Max(value = 6, message = "유효하지 않은 파일유형입니다.") Integer> filetype;
+    private List<String> filetype;
 
-    @Min(value = 0, message = "유효하지 않은 카테고리입니다.")
-    @Max(value = 5, message = "유효하지 않은 카테고리입니다.")
-    private int categoryId;
+    @NotNull(message = "카테고리를 선택하세요.")
+    private String category;
 
     @Size(max = 10, message = "해시태그는 최대 10개까지 등록할 수 있습니다.")
     private List<@Size(min = 1, max = 15, message = "태그명은 최소 1글자, 최대 15글자까지 입력 가능합니다.") String> tags;
@@ -54,8 +54,11 @@ public class PutArtReq {
     private String originArtImage;
 
     private String newArtImage;
+    private List<Integer> filetypeId;
+    private List<Integer> copyrightId;
+    private int categoryId;
 
-    public PutArtReq(String title, String simpleDescription, Integer price, String exclusive, Integer additionalCharge, Integer amount, List<Integer> copyright, String description, List<Integer> filetype, int categoryId, List<String> tags, String originArtImage) {
+    public PutArtReq(String title, String simpleDescription, Integer price, String exclusive, Integer additionalCharge, Integer amount, List<String> copyright, String description, List<String> filetype, String category, List<String> tags, String originArtImage) throws Exception {
         this.title = title;
         this.simpleDescription = simpleDescription;
         this.price = price;
@@ -65,10 +68,13 @@ public class PutArtReq {
         this.copyright = copyright;
         this.description = description;
         this.filetype = filetype;
-        this.categoryId = categoryId;
+        this.category = category;
         this.tags = tags;
         this.originArtImage = originArtImage;
         this.newArtImage = originArtImage;
+        this.filetypeId = Constant.getFiletypeIdList(filetype);
+        this.copyrightId = Constant.getCopyrightIdList(copyright);
+        this.categoryId = Constant.getCategoryId(category);
     }
 
     private String isExclusive(String flag){
