@@ -66,7 +66,7 @@ public class ArtProvider {
     public List<ArtInfo> getRecommendedArts(long artId) throws BaseException {
         try {
             // 회원 검증 및 ID 추출
-            long userId = jwtService.getUserIdx();
+            long userId = jwtService.getUserId();
 
             List<ArtInfo> result = artDao.selectRecommendedArts(userId, artId);
 
@@ -87,7 +87,7 @@ public class ArtProvider {
             GetArtsByUserRes result;
 
             // 회원 검증 및 ID 추출
-            long userId = jwtService.getUserIdx();
+            long userId = jwtService.getUserId();
 
             // 작가ID 확인
             int isUser = artDao.checkUser(artistId);
