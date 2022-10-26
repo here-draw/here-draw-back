@@ -1,5 +1,7 @@
 package org.cmccx.src.user;
 
+import org.cmccx.src.user.model.*;
+
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.S3Service;
 import org.slf4j.Logger;
