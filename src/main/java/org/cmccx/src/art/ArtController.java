@@ -2,7 +2,6 @@ package org.cmccx.src.art;
 
 import org.cmccx.config.BaseException;
 import org.cmccx.config.BaseResponse;
-import org.cmccx.config.BaseResponseStatus;
 import org.cmccx.src.art.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +15,6 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.cmccx.config.BaseResponseStatus.DELETE_SUCCESS;
 import static org.cmccx.config.BaseResponseStatus.VALIDATION_ERROR;
 
 @Validated
@@ -142,13 +140,10 @@ public class ArtController {
      */
     @ResponseBody
     @DeleteMapping("/{art-id}")
-    public BaseResponse<BaseResponseStatus> removeArt(@PathVariable("art-id") long artId) throws BaseException {
+    public BaseResponse<String> removeArt(@PathVariable("art-id") long artId) throws BaseException {
+        String result = artService.removeArt(artId);
 
-        if (artService.removeArt(artId)){
-            return new BaseResponse<>(DELETE_SUCCESS);
-        }
-
-        return null;
+        return new BaseResponse<>(result);
     }
 
 }
