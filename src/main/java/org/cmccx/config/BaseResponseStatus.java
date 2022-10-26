@@ -25,6 +25,12 @@ public enum BaseResponseStatus {
     INVALID_JWT(false, 2002, "유효하지 않은 JWT입니다."),
     INVALID_USER_JWT(false,2003,"권한이 없는 유저의 접근입니다."),
 
+    INVALID_ACCESS_TOKEN(false, 2004, "유효하지 않은 Access Token입니다."),
+
+    INVALID_SIGNUP_USER(false, 2005, ""),
+    BLOCKED_SIGNUP(false, 2006, "신고 3회 누적으로 영구 차단된 계정입니다."),
+    BLOCKED_LOGIN(false, 2007, ""),
+
     // users
     USERS_EMPTY_USER_ID(false, 2010, "유저 아이디 값을 확인해주세요."),
 
@@ -37,6 +43,7 @@ public enum BaseResponseStatus {
     // mieczy
     DUPLICATED_ARTIST_TITLE(false, 2501, "이미 등록된 작품 제목입니다."),
     INVALID_IMAGE_FILE(false, 2502, "이미지 파일만 업로드 가능합니다."),
+
 
 
     /**

@@ -23,10 +23,13 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.jetbrains:annotations:19.0.0'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'com.google.code.gson:gson:2.8.7'
+
     // Spring Boot Starter
     testImplementation ('org.springframework.boot:spring-boot-starter-test')
     implementation('org.springframework.boot:spring-boot-starter')
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
     // Web
     implementation ('org.springframework.boot:spring-boot-starter-web')
@@ -36,7 +39,6 @@ dependencies {
     implementation ('org.projectlombok:lombok')
     compileOnly ('org.projectlombok:lombok:1.18.16')
     annotationProcessor ('org.projectlombok:lombok:1.18.16')
-    implementation 'org.jetbrains:annotations:19.0.0'
 
     // DB
     runtimeOnly ('mysql:mysql-connector-java') //mysql8

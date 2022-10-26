@@ -1,6 +1,5 @@
 package org.cmccx.utils;
 
-
 import org.cmccx.config.BaseException;
 import org.cmccx.config.secret.Secret;
 import io.jsonwebtoken.Claims;
@@ -21,14 +20,14 @@ public class JwtService {
 
     /*
     JWT 생성
-    @param userIdx
+    @param userId
     @return String
      */
-    public String createJwt(int userIdx){
+    public String createJwt(long userId){
         Date now = new Date();
         return Jwts.builder()
                 .setHeaderParam("type","jwt")
-                .claim("userIdx",userIdx)
+                .claim("userId", userId)
                 .setIssuedAt(now)
                 .setExpiration(new Date(System.currentTimeMillis()+1*(1000*60*60*24*365)))
                 .signWith(SignatureAlgorithm.HS256, Secret.JWT_SECRET_KEY)
@@ -45,11 +44,11 @@ public class JwtService {
     }
 
     /*
-    JWT에서 userIdx 추출
-    @return int
+    JWT에서 userId 추출
+    @return long
     @throws BaseException
      */
-    public int getUserIdx() throws BaseException{
+    public long getUserId() throws BaseException{
         //1. JWT 추출
         String accessToken = getJwt();
         if(accessToken == null || accessToken.length() == 0){
@@ -66,8 +65,8 @@ public class JwtService {
             throw new BaseException(INVALID_JWT);
         }
 
-        // 3. userIdx 추출
-        return claims.getBody().get("userIdx",Integer.class);
+        // 3. userId 추출
+        return claims.getBody().get("userId", Long.class);
     }
 
 }
