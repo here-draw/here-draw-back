@@ -95,4 +95,16 @@ public class UserDao {
         String query = "UPDATE user SET last_login = now() where user_id = " + userId;
         this.jdbcTemplate.update(query);
     }
+
+    // 닉네임 중복 체크
+    public int checkNickname(String nickname) {
+        String query = "SELECT EXISTS(SELECT nickname from profile where nickname = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, nickname);
+    }
+
+    // 닉네임 설정(변경)
+    public void modifyNickname(long userId, String nickname) {
+        String query = "UPDATE profile SET nickname = ? where user_id = ?";
+        this.jdbcTemplate.update(query, nickname, userId);
+    }
 }

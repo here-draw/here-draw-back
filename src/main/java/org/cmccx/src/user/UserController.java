@@ -17,7 +17,11 @@ import static org.cmccx.config.BaseResponseStatus.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
+
+@Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -87,6 +91,28 @@ public class UserController {
             throw new BaseException(e.getStatus(), e.getMessage());
         } catch(Exception e) {
             logger.error("LoginByKakao Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 닉네임 설정(변경) API
+     * [PATCH] /users/nickname
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PatchMapping("/nickname")
+    public BaseResponse<String> modifyNickname(@RequestBody Map<String,String> map) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.modifyNickname(userIdByJwt, map.get("nickname"));
+
+            String result = "닉네임 설정이 완료되었습니다.";
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("ModifyNickname Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }

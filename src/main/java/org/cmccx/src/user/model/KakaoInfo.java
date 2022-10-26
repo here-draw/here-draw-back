@@ -1,4 +1,4 @@
-package org.cmccx.src.user;
+package org.cmccx.src.user.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
