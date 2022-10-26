@@ -137,4 +137,17 @@ public class UserService {
         }
         return kakaoInfo;
     }
+
+    // 닉네임 설정(변경)
+    public void modifyNickname(long userId, String nickname) throws BaseException{
+        try {
+            int isExist = userDao.checkNickname(nickname);
+            if(isExist == 1) {
+                throw new BaseException(DUPLICATED_NICKNAME);
+            }
+            userDao.modifyNickname(userId, nickname);
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
+        }
+    }
 }

@@ -39,6 +39,7 @@ public enum BaseResponseStatus {
     POST_USERS_INVALID_EMAIL(false, 2016, "이메일 형식을 확인해주세요."),
     POST_USERS_EXISTS_EMAIL(false,2017,"중복된 이메일입니다."),
 
+    DUPLICATED_NICKNAME(false, 2050, "중복된 닉네임입니다."),
 
     // mieczy
     DUPLICATED_ARTIST_TITLE(false, 2501, "이미 등록된 작품 제목입니다."),
