@@ -1,5 +1,7 @@
 package org.cmccx.src.user;
 
+import org.cmccx.src.user.model.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
