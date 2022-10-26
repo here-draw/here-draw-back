@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -34,7 +35,7 @@ public class ExceptionController {
         return new BaseResponse<>(e.getStatus());
     }
 
-    // @Valid 또는 @Validate 바인딩 에러 처리
+    // @Valid 바인딩 에러 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected BaseResponse handleValidException(MethodArgumentNotValidException e){
         // @Valid 에러 목록
@@ -43,6 +44,13 @@ public class ExceptionController {
         String message = errors.get(0).getDefaultMessage();
 
         return new BaseResponse(VALIDATION_ERROR, message);
+    }
+
+    // @Validated 바인딩 에러 처리
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected BaseResponse handleValidatedException(ConstraintViolationException e){
+
+        return new BaseResponse(VALIDATION_ERROR, e.getConstraintViolations().iterator().next().getMessage());
     }
 
     // @ModelAttribute 바인딩 에러 처리
