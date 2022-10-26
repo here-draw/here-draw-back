@@ -25,6 +25,12 @@ public enum BaseResponseStatus {
     INVALID_JWT(false, 2002, "유효하지 않은 JWT입니다."),
     INVALID_USER_JWT(false,2003,"권한이 없는 유저의 접근입니다."),
 
+    INVALID_ACCESS_TOKEN(false, 2004, "유효하지 않은 Access Token입니다."),
+
+    INVALID_SIGNUP_USER(false, 2005, ""),
+    BLOCKED_SIGNUP(false, 2006, "신고 3회 누적으로 영구 차단된 계정입니다."),
+    BLOCKED_LOGIN(false, 2007, ""),
+
     // users
     USERS_EMPTY_USER_ID(false, 2010, "유저 아이디 값을 확인해주세요."),
 
@@ -32,6 +38,7 @@ public enum BaseResponseStatus {
     POST_USERS_EMPTY_EMAIL(false, 2015, "이메일을 입력해주세요."),
     POST_USERS_INVALID_EMAIL(false, 2016, "이메일 형식을 확인해주세요."),
     POST_USERS_EXISTS_EMAIL(false,2017,"중복된 이메일입니다."),
+
 
 
 

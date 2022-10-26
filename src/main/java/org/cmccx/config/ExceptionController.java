@@ -26,7 +26,7 @@ public class ExceptionController {
 
     @ExceptionHandler(BaseException.class)
     protected BaseResponse handleBaseException(BaseException e){
-        int[] errCode = new int[]{/*동적으로 메세지를 줄 에러코드 입력*/};
+        int[] errCode = new int[]{2005, 2007};
 
         if (IntStream.of(errCode).anyMatch(x -> x == e.getStatus().getCode())){
             return new BaseResponse<>(e.getStatus(), e.getMessage());
