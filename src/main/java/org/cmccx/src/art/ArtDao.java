@@ -44,7 +44,7 @@ public class ArtDao {
 
     /** 작가:작품명 중복 확인 **/
     public int checkArtTitle(long userId, String title, long artId){
-        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ?)");
+        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ?) AND status <> 'D'");
         return this.jdbcTemplate.queryForObject(query.toString(), int.class, userId, title, artId);
     }
 
@@ -191,9 +191,7 @@ public class ArtDao {
                                         postArtReq.getAdditionalCharge()};
         this.jdbcTemplate.update(query.toString(), params);
 
-        long lastTagId = this.jdbcTemplate.queryForObject("SELECT last_insert_id()", long.class);
-
-        return lastTagId;
+        return this.jdbcTemplate.queryForObject("SELECT last_insert_id()", long.class);
 
     }
 
@@ -205,11 +203,11 @@ public class ArtDao {
 
         List<Long> tagId = new ArrayList<>();
 
-        for (int i = 0; i < tag.size(); i++){
-            int isExists = this.jdbcTemplate.update(query.toString(), tag.get(i));
+        for (String hashTag : tag) {
+            int isExists = this.jdbcTemplate.update(query.toString(), hashTag);
 
-            if (isExists == 0){ // 이미 있는 태그
-                tagId.add(this.jdbcTemplate.queryForObject(tagIdQuery.toString(), long.class, tag.get(i)));
+            if (isExists == 0) { // 이미 있는 태그
+                tagId.add(this.jdbcTemplate.queryForObject(tagIdQuery.toString(), long.class, hashTag));
             } else { // 새로 추가한 태그
                 tagId.add(this.jdbcTemplate.queryForObject(lastIdQuery.toString(), long.class));
             }
