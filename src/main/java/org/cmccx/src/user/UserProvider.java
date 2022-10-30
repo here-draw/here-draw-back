@@ -46,6 +46,16 @@ public class UserProvider {
         }
     }
 
+    // 닉네임 중복 여부 확인
+    public int checkNickname(String nickname) throws BaseException {
+        try {
+            return userDao.checkNickname(nickname);
+        } catch (Exception e){
+            logger.error("CheckNickname Error(UserDao)", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 카카오에서 사용자 정보 조회
     public String getKakaoUserInfo(String accessToken) throws BaseException{
         String reqURL = "https://kapi.kakao.com/v2/user/me";

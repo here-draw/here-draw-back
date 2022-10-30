@@ -96,7 +96,7 @@ public class UserController {
     }
 
     /**
-     * 닉네임 설정(변경) API
+     * 초기 닉네임 설정 API
      * [PATCH] /users/nickname
      * @return BaseResponse<String>
      */
@@ -113,6 +113,32 @@ public class UserController {
             throw new BaseException(e.getStatus());
         } catch(Exception e) {
             logger.error("ModifyNickname Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 닉네임 중복 체크 API
+     * [GET] /users/mypage/nickname
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @GetMapping("/mypage/nickname")
+    public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
+        try {
+            int isExist = userProvider.checkNickname(map.get("nickname"));
+
+            String result;
+            if(isExist == 0) {
+                result = "사용 가능한 닉네임입니다.";
+            } else {
+                throw new BaseException(DUPLICATED_NICKNAME);
+            }
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("CheckNickname Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }
