@@ -116,4 +116,25 @@ public class UserController {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
+
+    /**
+     * 프로필 정보 조회 API
+     * [GET] /users/mypage/profile
+     * @return BaseResponse<ProfileInfo>
+     */
+    @ResponseBody
+    @GetMapping("/mypage/profile")
+    public BaseResponse<ProfileInfo> getProfileInfo() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            ProfileInfo profileInfo = userProvider.getProfileInfo(userIdByJwt);
+
+            return new BaseResponse<>(profileInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetProfileInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }

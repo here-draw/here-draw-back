@@ -63,4 +63,14 @@ public class UserProvider {
             throw new BaseException(INVALID_ACCESS_TOKEN);
         }
     }
+
+    // 마이페이지 - 프로필 정보 조회
+    public ProfileInfo getProfileInfo(long userId) throws BaseException {
+        try {
+            return userDao.getProfileInfo(userId);
+        } catch (Exception e){
+            logger.error("GetProfileInfo Error(UserDao)", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }

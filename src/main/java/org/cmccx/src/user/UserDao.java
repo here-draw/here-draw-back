@@ -109,4 +109,15 @@ public class UserDao {
         String query = "UPDATE profile SET nickname = ? where user_id = ?";
         this.jdbcTemplate.update(query, nickname, userId);
     }
+
+    // 프로필 정보 조회
+    public ProfileInfo getProfileInfo(long userId) {
+        String query = "SELECT profile_image, nickname, description from profile where user_id = " + userId;
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profile_image"),
+                        rs.getString("nickname"),
+                        rs.getString("description"))
+                );
+    }
 }
