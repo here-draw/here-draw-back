@@ -7,6 +7,7 @@ import org.cmccx.src.art.model.PutArtReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -26,26 +27,26 @@ public class ArtDao {
 
     /** 회원 ID 확인 **/
     public int checkUser(long userId){
-        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ?)");
-        return this.jdbcTemplate.queryForObject(query.toString(), int.class, userId);
+        String query ="SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId);
     }
 
     /** 작품 ID 확인 **/
     public int checkArt(long artId){
-        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM art WHERE art_id = ?)");
-        return this.jdbcTemplate.queryForObject(query.toString(), int.class, artId);
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE art_id = ? AND status NOT IN ('B', 'D'))";
+        return this.jdbcTemplate.queryForObject(query, int.class, artId);
     }
 
     /** 작가-작품 관계 확인 **/
     public int checkUserArt(long userId, long artId){
-        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM art WHERE user_id =? AND art_id= ?)");
-        return this.jdbcTemplate.queryForObject(query.toString(), int.class, userId, artId);
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE user_id =? AND art_id= ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId, artId);
     }
 
     /** 작가:작품명 중복 확인 **/
     public int checkArtTitle(long userId, String title, long artId){
-        StringBuilder query = new StringBuilder("SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ?) AND status <> 'D'");
-        return this.jdbcTemplate.queryForObject(query.toString(), int.class, userId, title, artId);
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ?) AND status <> 'D'";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId, title, artId);
     }
 
     /** 메인: 작품 조회(최신 등록순) **/
@@ -112,18 +113,18 @@ public class ArtDao {
 
     /** 추천 작품 조회 **/
     public List<ArtInfo> selectRecommendedArts(long userId, long artId){
-        StringBuilder query = new StringBuilder("SELECT art.art_id, art_image, IFNULL(user_like.art_id, 0) AS count ");
-        query.append("FROM art ");
-        query.append("LEFT JOIN (SELECT art_id ");
-        query.append("FROM gallery ");
-        query.append("INNER JOIN bookmark b ON gallery.gallery_id = b.gallery_id ");
-        query.append("WHERE user_id = ? ");
-        query.append("GROUP BY art_id) user_like ON user_like.art_id = art.art_id ");
-        query.append("WHERE art.art_id <> ? AND status = 'S' ");
-        query.append("ORDER BY rand() ");
-        query.append("LIMIT 4");
+        String query = "SELECT art.art_id, art_image, IFNULL(user_like.art_id, 0) AS count " +
+                        "FROM art " +
+                        "LEFT JOIN (SELECT art_id " +
+                        "FROM gallery " +
+                        "INNER JOIN bookmark b ON gallery.gallery_id = b.gallery_id " +
+                        "WHERE user_id = ? " +
+                        "GROUP BY art_id) user_like ON user_like.art_id = art.art_id " +
+                        "WHERE art.art_id <> ? AND status = 'S' " +
+                        "ORDER BY rand() " +
+                        "LIMIT 4";
 
-        return this.jdbcTemplate.query(query.toString(),
+        return this.jdbcTemplate.query(query,
                 (rs, rowNum) -> new ArtInfo(
                         rs.getLong("art.art_id"),
                         rs.getString("art_image"),
@@ -134,14 +135,14 @@ public class ArtDao {
     /** 작품 상세 정보 조회 **/
     public GetArtByArtIdRes selectArtByArtId(long artId){
         // 작품 및 작가 정보 조회
-        StringBuilder infoQuery = new StringBuilder("SELECT art.user_id, art_image, title, price, simple_description, art.description, IFNULL(like_art, 0) AS like_art ");
-        infoQuery.append("FROM art ");
-        infoQuery.append("LEFT JOIN (SELECT COUNT(*) AS like_art, art_id ");
-        infoQuery.append("FROM bookmark ");
-        infoQuery.append("GROUP BY art_id) like_art_tb ON like_art_tb.art_id = art.art_id ");
-        infoQuery.append("WHERE art.art_id = ?");
+        String infoQuery = "SELECT art.user_id, art_image, title, price, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
+                            "FROM art " +
+                            "LEFT JOIN (SELECT COUNT(*) AS like_art, art_id " +
+                            "FROM bookmark " +
+                            "GROUP BY art_id) like_art_tb ON like_art_tb.art_id = art.art_id " +
+                            "WHERE art.art_id = ? AND status NOT IN ('B', 'D')";
 
-        GetArtByArtIdRes result =  this.jdbcTemplate.queryForObject(infoQuery.toString(),
+        GetArtByArtIdRes result =  this.jdbcTemplate.queryForObject(infoQuery,
                                     (rs, rowNum) -> new GetArtByArtIdRes(
                                             rs.getLong("art.user_id"),
                                             rs.getString("art_image"),
@@ -149,35 +150,36 @@ public class ArtDao {
                                             rs.getInt("price"),
                                             rs.getString("simple_description"),
                                             rs.getString("art.description"),
-                                            rs.getInt("like_art")),
+                                            rs.getInt("like_art"),
+                                            rs.getString("status")),
                                     artId);
 
         // 파일 유형 조회
-        StringBuilder fileQuery = new StringBuilder("SELECT type FROM file ");
-        fileQuery.append("INNER JOIN file_type ft ON file.file_type_id = ft.file_type_id ");
-        fileQuery.append("WHERE art_id = ?");
-        result.setFiletype(this.jdbcTemplate.query(fileQuery.toString(), (rs, rowNum) -> rs.getString("type"), artId));
+        String fileQuery = "SELECT type FROM file " +
+                            "INNER JOIN file_type ft ON file.file_type_id = ft.file_type_id " +
+                            "WHERE art_id = ?";
+        result.setFiletype(this.jdbcTemplate.query(fileQuery, (rs, rowNum) -> rs.getString("type"), artId));
 
         // 허용 범위 조회
-        StringBuilder copyrightQuery = new StringBuilder("SELECT type FROM copyright ");
-        copyrightQuery.append("INNER JOIN copyright_type ct ON copyright.copyright_type_id = ct.copyright_type_id ");
-        copyrightQuery.append("WHERE art_id = ?");
-        result.setCopyright(this.jdbcTemplate.query(copyrightQuery.toString(), (rs, rowNum) -> rs.getString("type"), artId));
+        String copyrightQuery = "SELECT type FROM copyright " +
+                                "INNER JOIN copyright_type ct ON copyright.copyright_type_id = ct.copyright_type_id " +
+                                "WHERE art_id = ?";
+        result.setCopyright(this.jdbcTemplate.query(copyrightQuery, (rs, rowNum) -> rs.getString("type"), artId));
 
         // 해시태그 조회
-        StringBuilder tagQuery = new StringBuilder("SELECT name FROM art_tag ");
-        tagQuery.append("INNER JOIN tag t ON art_tag.tag_id = t.tag_id ");
-        tagQuery.append("WHERE art_id = ?");
-        result.setTag(this.jdbcTemplate.query(tagQuery.toString(), (rs, rowNum) -> rs.getString("name"), artId));
+        String tagQuery = "SELECT name FROM art_tag " +
+                            "INNER JOIN tag t ON art_tag.tag_id = t.tag_id " +
+                            "WHERE art_id = ?";
+        result.setTag(this.jdbcTemplate.query(tagQuery, (rs, rowNum) -> rs.getString("name"), artId));
 
         return result;
     }
 
     /** 작품 등록 **/
     public long insertArt(long userId,PostArtReq postArtReq){
-        StringBuilder query = new StringBuilder("INSERT INTO art ");
-        query.append("(user_id, title, simple_description, price, count, art_image, category_type_id, description, exclusive_flag, additional_charge) ");
-        query.append("VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        String query = "INSERT INTO art " +
+                        "(user_id, title, simple_description, price, count, art_image, category_type_id, description, exclusive_flag, additional_charge) "+
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         Object[] params = new Object[]{userId,
                                         postArtReq.getTitle(),
@@ -189,7 +191,7 @@ public class ArtDao {
                                         postArtReq.getDescription(),
                                         postArtReq.getExclusive(),
                                         postArtReq.getAdditionalCharge()};
-        this.jdbcTemplate.update(query.toString(), params);
+        this.jdbcTemplate.update(query, params);
 
         return this.jdbcTemplate.queryForObject("SELECT last_insert_id()", long.class);
 
@@ -218,10 +220,10 @@ public class ArtDao {
 
     /** 파일 유형 등록 **/
     public int insertFiletype(long artId, List<Integer> filetypeId){
-        StringBuilder query = new StringBuilder("INSERT INTO file(art_id, file_type_id) VALUES (?, ?)");
-        return this.jdbcTemplate.batchUpdate(query.toString(), new BatchPreparedStatementSetter() {
+        String query = "INSERT INTO file(art_id, file_type_id) VALUES (?, ?)";
+        return this.jdbcTemplate.batchUpdate(query, new BatchPreparedStatementSetter() {
             @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
+            public void setValues(@NonNull PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, artId);
                 ps.setInt(2, filetypeId.get(i));
             }
@@ -235,10 +237,10 @@ public class ArtDao {
 
     /** 허용 범위 등록 **/
     public int insertCopyright(long artId, List<Integer> copyrightId) {
-        StringBuilder query = new StringBuilder("INSERT INTO copyright(art_id, copyright_type_id) VALUES (?, ?)");
-        return this.jdbcTemplate.batchUpdate(query.toString(), new BatchPreparedStatementSetter() {
+        String query = "INSERT INTO copyright(art_id, copyright_type_id) VALUES (?, ?)";
+        return this.jdbcTemplate.batchUpdate(query, new BatchPreparedStatementSetter() {
             @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
+            public void setValues(@NonNull PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, artId);
                 ps.setInt(2, copyrightId.get(i));
             }
@@ -252,10 +254,10 @@ public class ArtDao {
 
     /** 작품 태그 등록 **/
     public int insertArtTag(long artId, List<Long> tagId){
-        StringBuilder query = new StringBuilder("INSERT INTO art_tag(art_id, tag_id) VALUES (?, ?)");
-        return this.jdbcTemplate.batchUpdate(query.toString(), new BatchPreparedStatementSetter() {
+        String query = "INSERT INTO art_tag(art_id, tag_id) VALUES (?, ?)";
+        return this.jdbcTemplate.batchUpdate(query, new BatchPreparedStatementSetter() {
             @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
+            public void setValues(@NonNull PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, artId);
                 ps.setLong(2, tagId.get(i));
             }
@@ -269,11 +271,11 @@ public class ArtDao {
 
     /** 작품 수정 **/
     public int updateArt(long artId, PutArtReq putArtReq){
-        StringBuilder query = new StringBuilder("UPDATE art ");
-        query.append("SET title=?, simple_description=?, price=?, count=?,");
-        query.append("art_image=?, category_type_id=?, description=?,");
-        query.append("exclusive_flag=?, additional_charge=? ");
-        query.append("WHERE art_id = ?");
+        String query = "UPDATE art " +
+                        "SET title=?, simple_description=?, price=?, count=?," +
+                        "art_image=?, category_type_id=?, description=?," +
+                        "exclusive_flag=?, additional_charge=? " +
+                        "WHERE art_id = ?";
 
         Object[] params = new Object[]{
                 putArtReq.getTitle(),
@@ -287,34 +289,34 @@ public class ArtDao {
                 putArtReq.getAdditionalCharge(),
                 artId};
 
-        return this.jdbcTemplate.update(query.toString(), params);
+        return this.jdbcTemplate.update(query, params);
     }
 
     /** 작품 삭제 **/
     public int deleteArt(long userId, long artId){
-        StringBuilder query = new StringBuilder("UPDATE art SET status = 'D' WHERE user_id = ? AND art_id = ?");
-        return this.jdbcTemplate.update(query.toString(), userId, artId);
+        String query = "UPDATE art SET status = 'D' WHERE user_id = ? AND art_id = ?";
+        return this.jdbcTemplate.update(query, userId, artId);
     }
 
     /** 작품 파일 유형 삭제 **/
     public int deleteFiletype(long artId){
-        StringBuilder query = new StringBuilder("DELETE FROM file WHERE art_id =?");
+        String query = "DELETE FROM file WHERE art_id =?";
 
-        return this.jdbcTemplate.update(query.toString(), artId);
+        return this.jdbcTemplate.update(query, artId);
     }
 
     /** 작품 허용 범위 삭제 **/
     public int deleteCopyright(long artId){
-        StringBuilder query = new StringBuilder("DELETE FROM copyright WHERE art_id =?");
+        String query = "DELETE FROM copyright WHERE art_id =?";
 
-        return this.jdbcTemplate.update(query.toString(), artId);
+        return this.jdbcTemplate.update(query, artId);
     }
 
     /** 작품 허용 범위 삭제 **/
     public int deleteArtTag(long artId){
-        StringBuilder query = new StringBuilder("DELETE FROM art_tag WHERE art_id =?");
+        String query = "DELETE FROM art_tag WHERE art_id =?";
 
-        return this.jdbcTemplate.update(query.toString(), artId);
+        return this.jdbcTemplate.update(query, artId);
     }
 
 }

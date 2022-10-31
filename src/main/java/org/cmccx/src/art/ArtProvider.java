@@ -124,7 +124,7 @@ public class ArtProvider {
             // 작품ID 확인
             int isArt = artDao.checkArt(artId);
             if (isArt == 0){
-                throw new BaseException(BAD_REQUEST);
+                throw new BaseException(FAILED_ACCESS_ART);
             }
 
             GetArtByArtIdRes result = artDao.selectArtByArtId(artId);
