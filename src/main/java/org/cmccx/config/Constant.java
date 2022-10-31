@@ -2,7 +2,13 @@ package org.cmccx.config;
 
 import java.util.*;
 
+import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
+
 public class Constant {
+
+    public static final int USER = 0;
+    public static final int ART = 1;
+
     // 카테고리
     public static final Map<String, Integer> CATEGORY;
     static {
@@ -39,36 +45,72 @@ public class Constant {
         COPYRIGHT = Collections.unmodifiableMap(temp);
     }
 
-    public static List<Integer> getFiletypeIdList(List<String> filetype) throws Exception {
+    // 회원 신고 유형
+    public static final Map<String, Integer> USER_REPORT;
+    static {
+        Map<String, Integer> temp = new HashMap<>();
+        temp.put("유출/사칭/사기", 100);
+        temp.put("욕설/비하", 101);
+        temp.put("음란물/불건전만남 및 대화", 102);
+        temp.put("구매자신고(미입금)", 103);
+        temp.put("판매자신고(미발송)", 104);
+        USER_REPORT = Collections.unmodifiableMap(temp);
+    }
+
+    // 작품 신고 유형
+    public static final Map<String, Integer> ART_REPORT;
+    static {
+        Map<String, Integer> temp = new HashMap<>();
+        temp.put("유출/사칭/사기", 200);
+        temp.put("욕설/비하", 201);
+        temp.put("음란물", 202);
+        temp.put("기타", 203);
+        ART_REPORT = Collections.unmodifiableMap(temp);
+    }
+
+    public static List<Integer> getFiletypeIdList(List<String> filetype) throws BaseException {
         List<Integer> filetypeId = new ArrayList<>();
         for (String file : filetype){
-            Integer id = Constant.FILETYPE.get(file);
+            Integer id = FILETYPE.get(file);
             if (id == null){
-                throw new Exception();
+                throw new BaseException(BAD_REQUEST);
             }
             filetypeId.add(id);
         }
         return filetypeId;
     }
 
-    public static List<Integer> getCopyrightIdList(List<String> copyrights) throws Exception {
+    public static List<Integer> getCopyrightIdList(List<String> copyrights) throws BaseException {
         List<Integer> filetypeId = new ArrayList<>();
         for (String copyright : copyrights){
-            Integer id = Constant.COPYRIGHT.get(copyright);
+            Integer id = COPYRIGHT.get(copyright);
             if (id == null){
-                throw new Exception();
+                throw new BaseException(BAD_REQUEST);
             }
             filetypeId.add(id);
         }
         return filetypeId;
     }
 
-    public static int getCategoryId(String category) throws Exception {
-        Integer categoryId = Constant.CATEGORY.get(category);
+    public static int getCategoryId(String category) throws BaseException {
+        Integer categoryId = CATEGORY.get(category);
         if (categoryId == null){
-            throw new Exception();
+            throw new BaseException(BAD_REQUEST);
         }
         return categoryId;
+    }
+
+    public static int getReportId(int type, String report) throws BaseException {
+        Integer reportId;
+        if (type == 0) { // 회원 신고
+            reportId = USER_REPORT.get(report);
+        } else {    // 작품 신고
+            reportId = ART_REPORT.get(report);
+        }
+        if (reportId == null){
+            throw new BaseException(BAD_REQUEST);
+        }
+        return reportId;
     }
 }
 
