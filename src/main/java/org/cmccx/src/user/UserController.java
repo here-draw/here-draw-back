@@ -119,11 +119,11 @@ public class UserController {
 
     /**
      * 닉네임 중복 체크 API
-     * [GET] /users/mypage/nickname
+     * [GET] /users/check-nickname
      * @return BaseResponse<String>
      */
     @ResponseBody
-    @GetMapping("/mypage/nickname")
+    @GetMapping("/check-nickname")
     public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
         try {
             int isExist = userProvider.checkNickname(map.get("nickname"));
