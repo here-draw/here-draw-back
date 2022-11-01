@@ -8,6 +8,9 @@ import static org.cmccx.config.BaseResponseStatus.*;
 
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.S3Service;
+import org.cmccx.utils.FileService;
+import org.springframework.web.multipart.MultipartFile;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +33,16 @@ public class UserService {
     private final JwtService jwtService;
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
+    private final FileService fileService;
 
     @Autowired
-    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService, S3Service s3Service, ObjectMapper objectMapper) {
+    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService, S3Service s3Service, ObjectMapper objectMapper, FileService fileService) {
         this.userDao = userDao;
         this.userProvider = userProvider;
         this.jwtService = jwtService;
         this.s3Service = s3Service;
         this.objectMapper = objectMapper;
+        this.fileService = fileService;
     }
 
     /** 카카오로 로그인 **/
@@ -148,6 +153,40 @@ public class UserService {
             userDao.modifyNickname(userId, nickname);
         } catch (BaseException e) {
             throw new BaseException(e.getStatus());
+        }
+    }
+
+    // 프로필 수정
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
+    public void modifyProfileInfo(long userId, ProfileInfo profileInfo, MultipartFile newImage) throws BaseException {
+        String profileImgUrl = null;
+        String prevProfileImgUrl = null;
+        try {
+            // 새로운 프로필 이미지 업로드 및 기존 프로필 삭제
+            if (newImage != null) {
+                // 이미지 확장자 검증
+                boolean isValidFile = fileService.validateFile(newImage.getInputStream());
+                if (!isValidFile) {
+                    throw new BaseException(INVALID_IMAGE_FILE);
+                }
+
+                prevProfileImgUrl = userDao.getProfileImg(userId);
+                profileImgUrl = s3Service.updateImage(prevProfileImgUrl, newImage);
+            }
+
+            if(newImage == null) {
+                userDao.modifyProfileInfo(userId, profileInfo.getNickname(), profileInfo.getDescription());
+            } else {
+                userDao.modifyProfileInfo(userId, profileImgUrl, profileInfo.getNickname(), profileInfo.getDescription());
+            }
+
+        } catch (BaseException e){
+            s3Service.deleteImage(profileImgUrl);
+            throw new BaseException(e.getStatus());
+        } catch (Exception e){
+            s3Service.deleteImage(profileImgUrl);
+            logger.error("ModifyProfileInfo Error", e);
+            throw new BaseException(DATABASE_ERROR);
         }
     }
 }
