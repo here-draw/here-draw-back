@@ -109,4 +109,33 @@ public class UserDao {
         String query = "UPDATE profile SET nickname = ? where user_id = ?";
         this.jdbcTemplate.update(query, nickname, userId);
     }
+
+    // 프로필 정보 조회
+    public ProfileInfo getProfileInfo(long userId) {
+        String query = "SELECT profile_image, nickname, description from profile where user_id = " + userId;
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profile_image"),
+                        rs.getString("nickname"),
+                        rs.getString("description"))
+                );
+    }
+
+    // 프로필 정보 수정
+    public void modifyProfileInfo(long userId, String nickname, String description) {
+        String query = "UPDATE profile SET nickname = ?, description = ? where user_id = ?";
+        this.jdbcTemplate.update(query, nickname, description, userId);
+    }
+
+    // 프로필 정보 수정(프로필 사진 포함)
+    public void modifyProfileInfo(long userId, String imageUrl, String nickname, String description) {
+        String query = "UPDATE profile SET profile_image = ?, nickname = ?, description = ? where user_id = ?";
+        this.jdbcTemplate.update(query, imageUrl, nickname, description, userId);
+    }
+
+    // 프로필 사진 조회
+    public String getProfileImg(long userId) {
+        String query = "SELECT profile_image from profile where user_id = " + userId;
+        return this.jdbcTemplate.queryForObject(query, String.class);
+    }
 }

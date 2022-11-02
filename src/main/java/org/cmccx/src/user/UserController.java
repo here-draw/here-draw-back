@@ -96,7 +96,7 @@ public class UserController {
     }
 
     /**
-     * 닉네임 설정(변경) API
+     * 초기 닉네임 설정 API
      * [PATCH] /users/nickname
      * @return BaseResponse<String>
      */
@@ -113,6 +113,76 @@ public class UserController {
             throw new BaseException(e.getStatus());
         } catch(Exception e) {
             logger.error("ModifyNickname Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 닉네임 중복 체크 API
+     * [GET] /users/mypage/nickname
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @GetMapping("/mypage/nickname")
+    public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
+        try {
+            int isExist = userProvider.checkNickname(map.get("nickname"));
+
+            String result;
+            if(isExist == 0) {
+                result = "사용 가능한 닉네임입니다.";
+            } else {
+                throw new BaseException(DUPLICATED_NICKNAME);
+            }
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("CheckNickname Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 프로필 정보 조회 API
+     * [GET] /users/mypage/profile
+     * @return BaseResponse<ProfileInfo>
+     */
+    @ResponseBody
+    @GetMapping("/mypage/profile")
+    public BaseResponse<ProfileInfo> getProfileInfo() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            ProfileInfo profileInfo = userProvider.getProfileInfo(userIdByJwt);
+
+            return new BaseResponse<>(profileInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetProfileInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 프로필 정보 수정 API
+     * [PATCH] /users/mypage/profile
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PatchMapping("/mypage/profile")
+    public BaseResponse<String> modifyProfileInfo(@RequestPart(value = "profileInfo") ProfileInfo profileInfo,
+                                                  @RequestPart(value = "image", required = false) MultipartFile image) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.modifyProfileInfo(userIdByJwt, profileInfo, image);
+
+            String result = "프로필 수정이 완료되었습니다.";
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("ModifyProfileInfo Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }

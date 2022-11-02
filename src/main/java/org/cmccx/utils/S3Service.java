@@ -82,11 +82,13 @@ public class S3Service {
     public void deleteImage(String imageUrl) throws BaseException {
         try {
             if (imageUrl != null) {
-                // 파일명 디코딩
-                String fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.length());
-                String decodeData = URLDecoder.decode(fileName, "UTF-8");
-                // 파일 삭제
-                amazonS3.deleteObject(new DeleteObjectRequest(bucket, directory + decodeData));
+                if(imageUrl.startsWith("https://heredraw-bucket")) {
+                    // 파일명 디코딩
+                    String fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.length());
+                    String decodeData = URLDecoder.decode(fileName, "UTF-8");
+                    // 파일 삭제
+                    amazonS3.deleteObject(new DeleteObjectRequest(bucket, directory + decodeData));
+                }
             }
         } catch (Exception e) {
             logger.error("S3 ERROR", e);
