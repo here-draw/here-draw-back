@@ -158,7 +158,7 @@ public class UserDao {
         if(statusCheck.equals(status)) {
             return 0;
         } else {
-            String patchFollowQuery = "update follow set status = '" + status + "' where follower_id = ? and target_user_id = ?";
+            String patchFollowQuery = "update follow set status = ? where follower_id = ? and target_user_id = ?";
             this.jdbcTemplate.update(patchFollowQuery, status, userId, targetId);
             return 1;
         }

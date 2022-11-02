@@ -219,4 +219,30 @@ public class UserService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    // 팔로우 취소
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
+    public void deleteFollow(long userId, long targetId) throws BaseException {
+        try {
+            if(userDao.checkUserId(userId) == 0){ // 잘못된 JWT(해당 user없음)
+                throw new BaseException(INVALID_JWT);
+            }
+            if(userDao.checkUserId(targetId) == 0) { // 해당 (target)user없음
+                throw new BaseException(BAD_REQUEST);
+            }
+            if(userDao.checkFollowList(userId, targetId) == 1) { // FollowList 안에 이미 있는 경우 (A / I)
+                if(userDao.patchFollowList(userId, targetId, "I") == 0) {
+                    throw new BaseException(DUPLICATED_UNFOLLOW);
+                }
+            } else {
+                throw new BaseException(DUPLICATED_UNFOLLOW);
+            }
+
+        } catch (BaseException e){
+            throw new BaseException(e.getStatus());
+        } catch (Exception e){
+            logger.error("DeleteFollow Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }

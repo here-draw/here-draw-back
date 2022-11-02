@@ -209,4 +209,25 @@ public class UserController {
         }
     }
 
+    /**
+     * 팔로우 취소 API
+     * [DELETE] /users/:user-id/unfollow
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @DeleteMapping("/{user-id}/unfollow")
+    public BaseResponse<String> deleteFollow(@PathVariable("user-id") long targetId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.deleteFollow(userIdByJwt, targetId);
+            String result = "팔로우 취소 요청에 성공하였습니다.";
+
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("DeleteFollow Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }

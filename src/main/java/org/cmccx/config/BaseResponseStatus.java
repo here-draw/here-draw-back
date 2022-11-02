@@ -42,6 +42,7 @@ public enum BaseResponseStatus {
     DUPLICATED_NICKNAME(false, 2050, "중복된 닉네임입니다."),
 
     DUPLICATED_FOLLOW(false, 2060, "중복된 팔로우 요청입니다."),
+    DUPLICATED_UNFOLLOW(false, 2061, "중복된 팔로우 취소 요청입니다."),
 
     // mieczy
     DUPLICATED_ARTIST_TITLE(false, 2501, "이미 등록된 작품 제목입니다."),
