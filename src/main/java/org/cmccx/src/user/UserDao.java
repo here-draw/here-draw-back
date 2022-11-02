@@ -98,6 +98,12 @@ public class UserDao {
         this.jdbcTemplate.update(query);
     }
 
+    // userId 체크
+    public int checkUserId(long userId) {
+        String query = "SELECT EXISTS(SELECT user_id from profile where user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId);
+    }
+
     // 닉네임 중복 체크
     public int checkNickname(String nickname) {
         String query = "SELECT EXISTS(SELECT nickname from profile where nickname = ?)";
@@ -138,4 +144,30 @@ public class UserDao {
         String query = "SELECT profile_image from profile where user_id = " + userId;
         return this.jdbcTemplate.queryForObject(query, String.class);
     }
+
+    // FollowList 체크
+    public int checkFollowList(long userId, long targetId) {
+        String query = "SELECT EXISTS(SELECT follower_id from follow where follower_id = ? and target_user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId, targetId);
+    }
+
+    // FollowList 수정
+    public int patchFollowList(long userId, long targetId, String status) {
+        String checkStatusQuery = "select status from follow where follower_id = ? and target_user_id = ?";
+        String statusCheck = this.jdbcTemplate.queryForObject(checkStatusQuery, (rs, rowNum) -> rs.getString("status"), userId, targetId);
+        if(statusCheck.equals(status)) {
+            return 0;
+        } else {
+            String patchFollowQuery = "update follow set status = '" + status + "' where follower_id = ? and target_user_id = ?";
+            this.jdbcTemplate.update(patchFollowQuery, status, userId, targetId);
+            return 1;
+        }
+    }
+
+    public void postFollowList(long userId, long targetId) {
+        String createQuery = "insert into follow (follower_id, target_user_id) VALUES (?,?)";
+        this.jdbcTemplate.update(createQuery, userId, targetId);
+    }
+
+
 }

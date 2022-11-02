@@ -186,4 +186,27 @@ public class UserController {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
+
+    /**
+     * 팔로우 API
+     * [POST] /users/:user-id/follow
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PostMapping("/{user-id}/follow")
+    public BaseResponse<String> postFollow(@PathVariable("user-id") long targetId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.postFollow(userIdByJwt, targetId);
+            String result = "팔로우 요청에 성공하였습니다.";
+
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("PostFollow Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
 }
