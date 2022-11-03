@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 import static org.cmccx.config.BaseResponseStatus.*;
@@ -57,6 +59,16 @@ public class ArtService {
             }
 
             // 이미지 워터마크 합성
+
+            // 이미지 가로, 세로 크기 저장
+            BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+            int width = bufferedImage.getWidth();
+            int height = bufferedImage.getHeight();
+            if (width <= 0 || height <= 0) {
+                throw new BaseException(INVALID_IMAGE_WIDTH_HEIGHT);
+            }
+            postArtReq.setImageWidth(width);
+            postArtReq.setImageHeight(height);
 
             // 이미지 저장
             artImageUrl = s3Service.uploadImage(image);
@@ -131,6 +143,16 @@ public class ArtService {
 
                 // 이미지 워터마크 합성
 
+                // 이미지 가로, 세로 크기 저장
+                BufferedImage bufferedImage = ImageIO.read(newImage.getInputStream());
+                int width = bufferedImage.getWidth();
+                int height = bufferedImage.getHeight();
+                if (width <= 0 || height <= 0) {
+                    throw new BaseException(INVALID_IMAGE_WIDTH_HEIGHT);
+                }
+                putArtReq.setImageWidth(width);
+                putArtReq.setImageHeight(height);
+
                 // 이미지 업데이트
                 artImageUrl = s3Service.uploadImage(newImage);
                 putArtReq.setNewArtImage(artImageUrl);
@@ -143,28 +165,28 @@ public class ArtService {
             }
 
             // 파일 유형 저장
-            result = artDao.deleteFiletype(artId);
+            artDao.deleteFiletype(artId);
             result = artDao.insertFiletype(artId, putArtReq.getFiletypeId());
             if (result < putArtReq.getFiletype().size()){
                 throw new BaseException(DATABASE_ERROR);
             }
 
             // 허용 범위 저장
-            result = artDao.deleteCopyright(artId);
+            artDao.deleteCopyright(artId);
             result = artDao.insertCopyright(artId, putArtReq.getCopyrightId());
             if (result < putArtReq.getCopyright().size()){
                 throw new BaseException(DATABASE_ERROR);
             }
 
             // 태그 저장
-            result = artDao.deleteArtTag(artId);
+            artDao.deleteArtTag(artId);
             List<String> tags = putArtReq.getTags();
             if (tags != null && !tags.isEmpty()){
                 List<Long> tagId = artDao.insertTag(tags);
 
                 // 작품 해시태그 저장
                 result = artDao.insertArtTag(artId, tagId);
-                if (result < tags.size()){
+                if (result < tags.size()) {
                     throw new BaseException(DATABASE_ERROR);
                 }
             }

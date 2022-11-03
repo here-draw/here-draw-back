@@ -2,9 +2,11 @@ package org.cmccx.src.art.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 
 @Getter
+@JsonPropertyOrder({"artId", "artImage", "width", "height", "title"})
 public class ArtInfo {
     private long artId;
 
@@ -17,6 +19,12 @@ public class ArtInfo {
     private String title;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int width;
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int height;
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int price;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,19 +33,24 @@ public class ArtInfo {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean sales;
 
-    public ArtInfo(long artId, String artImage, String title, String date) {
+    // 메인: 작품 조회
+    public ArtInfo(long artId, String artImage, int width, int height, String title, String date) {
         this.artId = artId;
         this.artImage = artImage;
+        this.width = width;
+        this.height = height;
         this.title = title;
         this.date = date;
     }
 
+    // 추천 작품 조회
     public ArtInfo(long artId, String artImage, int count) {
         this.artId = artId;
         this.artImage = artImage;
         this.like = isLike(count);
     }
 
+    // 작가별 작품 조회
     public ArtInfo(long artId, String artImage, String title, int price, int count, String status){
         this.artId = artId;
         this.artImage = artImage;

@@ -51,6 +51,8 @@ public class PostArtReq {
     private List<@Size(min = 1, max = 15, message = "태그명은 최소 1글자, 최대 15글자까지 입력 가능합니다.") String> tags;
 
     private String artImage;
+    private int imageWidth;
+    private int imageHeight;
     private List<Integer> filetypeId;
     private List<Integer> copyrightId;
     private int categoryId;

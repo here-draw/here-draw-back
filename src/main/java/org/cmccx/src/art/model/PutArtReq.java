@@ -54,6 +54,8 @@ public class PutArtReq {
     private String originArtImage;
 
     private String newArtImage;
+    private int imageWidth;
+    private int imageHeight;
     private List<Integer> filetypeId;
     private List<Integer> copyrightId;
     private int categoryId;

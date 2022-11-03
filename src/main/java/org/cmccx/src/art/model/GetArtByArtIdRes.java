@@ -10,6 +10,8 @@ import java.util.List;
 public class GetArtByArtIdRes {
     private long artistId;
     private String artImage;
+    private int width;
+    private int height;
     private String title;
     private int price;
     private String simpleDescription;
@@ -20,9 +22,11 @@ public class GetArtByArtIdRes {
     private List<String> tag;
     private boolean sales;
 
-    public GetArtByArtIdRes(long userId, String artImage, String title, int price, String simpleDescription, String description, int like, String status) {
+    public GetArtByArtIdRes(long userId, String artImage, int width, int height, String title, int price, String simpleDescription, String description, int like, String status) {
         this.artistId = userId;
         this.artImage = artImage;
+        this.width = width;
+        this.height = height;
         this.title = title;
         this.price = price;
         this.simpleDescription = simpleDescription;
