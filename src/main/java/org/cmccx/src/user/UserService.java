@@ -135,7 +135,7 @@ public class UserService {
             if(jsonNode.get("kakao_account").get("profile").get("is_default_image").asBoolean()) {
                 System.out.println("default image");
             } else {
-                kakaoInfo.setProfileImage(jsonNode.get("properties").get("profile_image").asText());
+                kakaoInfo.setProfileImage(jsonNode.get("properties").get("thumbnail_image").asText());
             }
         } catch (Exception e) {
             return kakaoInfo;
