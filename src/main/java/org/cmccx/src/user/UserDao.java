@@ -127,6 +127,21 @@ public class UserDao {
                 );
     }
 
+    // 마이페이지 - 유저 정보(팔로우 수, 팔로잉 수, 작품찜 수) 조회
+    public LikeInfo getLikeInfo(long userId) {
+        String query = "SELECT COUNT(CASE WHEN target_user_id= ? THEN 1 END) AS followerCnt,\n" +
+                "       COUNT(CASE WHEN follower_id = ? THEN 1 END) AS followingCnt,\n" +
+                "       (SELECT COUNT(*)\n" +
+                "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt\n" +
+                "FROM follow";
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new LikeInfo(
+                        rs.getInt("followerCnt"),
+                        rs.getInt("followingCnt"),
+                        rs.getInt("likeCnt")),
+                userId, userId, userId);
+    }
+
     // 프로필 정보 수정
     public void modifyProfileInfo(long userId, String nickname, String description) {
         String query = "UPDATE profile SET nickname = ?, description = ? where user_id = ?";

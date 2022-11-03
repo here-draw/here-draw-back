@@ -230,4 +230,25 @@ public class UserController {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
+
+    /**
+     * 마이페이지 상단 조회 API
+     * [GET] /users/mypage
+     * @return BaseResponse<LikeInfo>
+     */
+    @ResponseBody
+    @GetMapping("/mypage")
+    public BaseResponse<LikeInfo> getLikeInfo() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            LikeInfo likeInfo = userProvider.getLikeInfo(userIdByJwt);
+
+            return new BaseResponse<>(likeInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetLikeInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }
