@@ -47,6 +47,8 @@ public enum BaseResponseStatus {
     // mieczy
     DUPLICATED_ARTIST_TITLE(false, 2501, "이미 등록된 작품 제목입니다."),
     INVALID_IMAGE_FILE(false, 2502, "이미지 파일만 업로드 가능합니다."),
+    EXCEEDED_FILE_SIZE(false, 2503, "업로드 가능한 최대 용량은 50MB입니다."),
+    INVALID_IMAGE_WIDTH_HEIGHT(false, 2504, "이미지 크기를 확인할 수 없습니다."),
 
 
 
