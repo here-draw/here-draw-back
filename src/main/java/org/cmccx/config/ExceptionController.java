@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.validation.ConstraintViolationException;
 import java.util.List;
@@ -76,6 +77,13 @@ public class ExceptionController {
     protected BaseResponse handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         logger.error(e.getMessage());
         return new BaseResponse(BAD_REQUEST);
+    }
+
+    // 파일 업로드 최대 용량 초과 에러 처리
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    protected BaseResponse handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        logger.error(e.getMessage());
+        return new BaseResponse(EXCEEDED_FILE_SIZE);
     }
 
     //Authentication 권한이 없는 경우 발생 시 에러 처리(security에서 발생시킴)
