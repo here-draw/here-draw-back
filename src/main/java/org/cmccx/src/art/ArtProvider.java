@@ -34,6 +34,7 @@ public class ArtProvider {
         try {
             return artDao.checkUserArt(userId, artId);
         } catch (Exception e){
+            logger.error("CheckUserArt Error", e);
             throw new BaseException(DATABASE_ERROR);
         }
     }
@@ -43,6 +44,7 @@ public class ArtProvider {
         try {
             return artDao.checkArtTitle(userId, title, artId);
         } catch (Exception e){
+            logger.error("CheckArtTitle Error", e);
             throw new BaseException(DATABASE_ERROR);
         }
     }

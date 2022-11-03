@@ -45,13 +45,13 @@ public class ArtDao {
 
     /** 작가:작품명 중복 확인 **/
     public int checkArtTitle(long userId, String title, long artId){
-        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ?) AND status <> 'D'";
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ? AND status <> 'D')";
         return this.jdbcTemplate.queryForObject(query, int.class, userId, title, artId);
     }
 
     /** 메인: 작품 조회(최신 등록순) **/
     public List<ArtInfo> selectArts(int categoryId, long artId, String date, int size){
-        StringBuilder query = new StringBuilder("SELECT art_id, art_image, title, created_at FROM art ");
+        StringBuilder query = new StringBuilder("SELECT art_id, art_image, image_width, image_height, title, created_at FROM art ");
         Object[] params;
 
         if (categoryId == 0){   // 전체 조회
@@ -72,6 +72,8 @@ public class ArtDao {
                 (rs, rowNum) -> new ArtInfo(
                         rs.getLong("art_id"),
                         rs.getString("art_image"),
+                        rs.getInt("image_width"),
+                        rs.getInt("image_height"),
                         rs.getString("title"),
                         rs.getString("created_at")),
                 params);
@@ -135,7 +137,7 @@ public class ArtDao {
     /** 작품 상세 정보 조회 **/
     public GetArtByArtIdRes selectArtByArtId(long artId){
         // 작품 및 작가 정보 조회
-        String infoQuery = "SELECT art.user_id, art_image, title, price, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
+        String infoQuery = "SELECT art.user_id, art_image, image_width, image_height, title, price, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
                             "FROM art " +
                             "LEFT JOIN (SELECT COUNT(*) AS like_art, art_id " +
                             "FROM bookmark " +
@@ -146,6 +148,8 @@ public class ArtDao {
                                     (rs, rowNum) -> new GetArtByArtIdRes(
                                             rs.getLong("art.user_id"),
                                             rs.getString("art_image"),
+                                            rs.getInt("image_width"),
+                                            rs.getInt("image_height"),
                                             rs.getString("title"),
                                             rs.getInt("price"),
                                             rs.getString("simple_description"),
@@ -178,8 +182,8 @@ public class ArtDao {
     /** 작품 등록 **/
     public long insertArt(long userId,PostArtReq postArtReq){
         String query = "INSERT INTO art " +
-                        "(user_id, title, simple_description, price, count, art_image, category_type_id, description, exclusive_flag, additional_charge) "+
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        "(user_id, title, simple_description, price, count, art_image, image_width, image_height, category_type_id, description, exclusive_flag, additional_charge) "+
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         Object[] params = new Object[]{userId,
                                         postArtReq.getTitle(),
@@ -187,6 +191,8 @@ public class ArtDao {
                                         postArtReq.getPrice(),
                                         postArtReq.getAmount(),
                                         postArtReq.getArtImage(),
+                                        postArtReq.getImageWidth(),
+                                        postArtReq.getImageHeight(),
                                         postArtReq.getCategoryId(),
                                         postArtReq.getDescription(),
                                         postArtReq.getExclusive(),
@@ -273,7 +279,8 @@ public class ArtDao {
     public int updateArt(long artId, PutArtReq putArtReq){
         String query = "UPDATE art " +
                         "SET title=?, simple_description=?, price=?, count=?," +
-                        "art_image=?, category_type_id=?, description=?," +
+                        "art_image=?, image_width=?, image_height=?," +
+                        "category_type_id=?, description=?," +
                         "exclusive_flag=?, additional_charge=? " +
                         "WHERE art_id = ?";
 
@@ -283,6 +290,8 @@ public class ArtDao {
                 putArtReq.getPrice(),
                 putArtReq.getAmount(),
                 putArtReq.getNewArtImage(),
+                putArtReq.getImageWidth(),
+                putArtReq.getImageHeight(),
                 putArtReq.getCategoryId(),
                 putArtReq.getDescription(),
                 putArtReq.getExclusive(),
