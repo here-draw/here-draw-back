@@ -251,4 +251,25 @@ public class UserController {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
+
+    /**
+     * 작가 정보 조회 API
+     * [GET] /users/:artist-id/artist-info
+     * @return BaseResponse<ArtistInfo>
+     */
+    @ResponseBody
+    @GetMapping("/{artist-id}/artist-info")
+    public BaseResponse<ArtistInfo> getArtistInfo(@PathVariable("artist-id") long artistId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            ArtistInfo artistInfo = userProvider.getArtistInfo(userIdByJwt, artistId);
+
+            return new BaseResponse<>(artistInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetArtistInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }

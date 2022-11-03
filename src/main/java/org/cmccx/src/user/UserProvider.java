@@ -92,4 +92,13 @@ public class UserProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    public ArtistInfo getArtistInfo(long userId, long artistId) throws BaseException {
+        try {
+            return userDao.getArtistInfo(userId, artistId);
+        } catch (Exception e){
+            logger.error("GetArtistInfo Error(UserDao)", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }
