@@ -14,6 +14,8 @@ public class GetArtByArtIdRes {
     private int height;
     private String title;
     private int price;
+    private boolean exclusive;
+    private int additionalCharge;
     private String simpleDescription;
     private String description;
     private int like;
@@ -21,14 +23,17 @@ public class GetArtByArtIdRes {
     private List<String> copyright;
     private List<String> tag;
     private boolean sales;
+    private boolean myArt;
 
-    public GetArtByArtIdRes(long userId, String artImage, int width, int height, String title, int price, String simpleDescription, String description, int like, String status) {
+    public GetArtByArtIdRes(long userId, String artImage, int width, int height, String title, int price, String exclusive, int additionalCharge,String simpleDescription, String description, int like, String status) {
         this.artistId = userId;
         this.artImage = artImage;
         this.width = width;
         this.height = height;
         this.title = title;
         this.price = price;
+        this.exclusive = isExclusive(exclusive);
+        this.additionalCharge = additionalCharge;
         this.simpleDescription = simpleDescription;
         this.description = description;
         this.like = like;
@@ -37,6 +42,13 @@ public class GetArtByArtIdRes {
 
     private boolean isSales(String status){
         if (status.equals("F")) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isExclusive(String status){
+        if (status.equals("N")) {
             return false;
         }
         return true;

@@ -127,6 +127,12 @@ public class ArtService {
                 throw new BaseException(INVALID_USER_JWT);
             }
 
+            // 작품 수량 유효한지 확인
+            int sales = artProvider.checkArtSales(artId);
+            if (sales >= putArtReq.getAmount()) {
+                throw new BaseException(EXCEEDED_ART_QUANTITY);
+            }
+
             // 작품명 중복 검사
             int isDuplicated = artProvider.checkArtTitle(userId, putArtReq.getTitle(), artId);
             if (isDuplicated == 1){
@@ -207,11 +213,25 @@ public class ArtService {
     }
 
     /** 작품 삭제 **/
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
     public String removeArt(long artId) throws BaseException {
         try {
-            // 회원ID 추출
+            // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
 
+            // 독점 판매 여부 확인
+            String status = artProvider.checkArtStatus(artId);
+            if (status.equals("E")) {
+                throw new BaseException(EXCLUSIVE_SALE_ART);
+            }
+
+            // 작가-작품 관계 확인
+            int isValidArt = artProvider.checkUserArt(userId, artId);
+            if (isValidArt == 0){
+                throw new BaseException(BAD_REQUEST);
+            }
+
+            // 작품 삭제
             int result = artDao.deleteArt(userId, artId);
             if (result == 0){
                 throw new BaseException(BAD_REQUEST);

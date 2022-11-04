@@ -27,19 +27,25 @@ public class ArtDao {
 
     /** 회원 ID 확인 **/
     public int checkUser(long userId){
-        String query ="SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ?)";
+        String query ="SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ? AND status NOT IN ('D', 'P'))";
         return this.jdbcTemplate.queryForObject(query, int.class, userId);
     }
 
     /** 작품 ID 확인 **/
     public int checkArt(long artId){
-        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE art_id = ? AND status NOT IN ('B', 'D'))";
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE art_id = ? AND status NOT IN ('B', 'D', 'N'))";
         return this.jdbcTemplate.queryForObject(query, int.class, artId);
+    }
+
+    /** 작품 상태 조회 **/
+    public String checkArtStatus(long artId) {
+        String query = "SELECT status FROM art WHERE art_id = ?";
+        return this.jdbcTemplate.queryForObject(query, String.class, artId);
     }
 
     /** 작가-작품 관계 확인 **/
     public int checkUserArt(long userId, long artId){
-        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE user_id =? AND art_id= ?)";
+        String query = "SELECT EXISTS(SELECT 1 FROM art WHERE user_id = ? AND art_id = ? AND status NOT IN ('B', 'D', 'N'))";
         return this.jdbcTemplate.queryForObject(query, int.class, userId, artId);
     }
 
@@ -47,6 +53,12 @@ public class ArtDao {
     public int checkArtTitle(long userId, String title, long artId){
         String query = "SELECT EXISTS(SELECT 1 FROM art WHERE (user_id = ? AND title = ?) AND art_id <> ? AND status <> 'D')";
         return this.jdbcTemplate.queryForObject(query, int.class, userId, title, artId);
+    }
+
+    /** 작품 판매수량 조회 **/
+    public int selectSales(long artId) {
+        String query = "SELECT sales_quantity FROM art WHERE art_id = ?";
+        return this.jdbcTemplate.queryForObject(query, int.class, artId);
     }
 
     /** 메인: 작품 조회(최신 등록순) **/
@@ -91,7 +103,7 @@ public class ArtDao {
         query.append("WHERE art.user_id = ? AND art.art_id <> ? ");
 
         if (isMyPage){  // MYPage
-            query.append("AND (status = 'S' OR status = 'F') ");
+            query.append("AND (status IN ('S', 'F', 'E')) ");
         } else {  // 작가 홈
             query.append("AND (status = 'S') ");
         }
@@ -137,12 +149,12 @@ public class ArtDao {
     /** 작품 상세 정보 조회 **/
     public GetArtByArtIdRes selectArtByArtId(long artId){
         // 작품 및 작가 정보 조회
-        String infoQuery = "SELECT art.user_id, art_image, image_width, image_height, title, price, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
+        String infoQuery = "SELECT art.user_id, art_image, image_width, image_height, title, price, exclusive_flag, additional_charge, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
                             "FROM art " +
                             "LEFT JOIN (SELECT COUNT(*) AS like_art, art_id " +
                             "FROM bookmark " +
                             "GROUP BY art_id) like_art_tb ON like_art_tb.art_id = art.art_id " +
-                            "WHERE art.art_id = ? AND status NOT IN ('B', 'D')";
+                            "WHERE art.art_id = ? AND status NOT IN ('B', 'D', 'N')";
 
         GetArtByArtIdRes result =  this.jdbcTemplate.queryForObject(infoQuery,
                                     (rs, rowNum) -> new GetArtByArtIdRes(
@@ -152,6 +164,8 @@ public class ArtDao {
                                             rs.getInt("image_height"),
                                             rs.getString("title"),
                                             rs.getInt("price"),
+                                            rs.getString("exclusive_flag"),
+                                            rs.getInt("additional_charge"),
                                             rs.getString("simple_description"),
                                             rs.getString("art.description"),
                                             rs.getInt("like_art"),

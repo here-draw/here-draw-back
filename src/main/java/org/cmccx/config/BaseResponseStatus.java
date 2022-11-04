@@ -49,6 +49,8 @@ public enum BaseResponseStatus {
     INVALID_IMAGE_FILE(false, 2502, "이미지 파일만 업로드 가능합니다."),
     EXCEEDED_FILE_SIZE(false, 2503, "업로드 가능한 최대 용량은 50MB입니다."),
     INVALID_IMAGE_WIDTH_HEIGHT(false, 2504, "이미지 크기를 확인할 수 없습니다."),
+    EXCLUSIVE_SALE_ART(false, 2505, "독점 판매된 작품은 삭제할 수 없습니다."),
+    EXCEEDED_ART_QUANTITY(false, 2506, "판매 수량보다 적은 값은 입력할 수 없습니다."),
 
 
 
@@ -62,6 +64,7 @@ public enum BaseResponseStatus {
     FAILED_TO_LOGIN(false,3014,"없는 아이디거나 비밀번호가 틀렸습니다."),
 
     FAILED_ACCESS_ART(false, 3501, "차단 또는 삭제된 작품입니다."),
+    FAILED_ACCESS_USER(false, 3502, "차단 또는 탈퇴한 회원입니다."),
 
 
 

@@ -13,6 +13,7 @@ public class Constant {
     public static final Map<String, Integer> CATEGORY;
     static {
         Map<String, Integer> temp = new HashMap<>();
+        temp.put("전체", 0);
         temp.put("캐릭터", 1);
         temp.put("풍경화", 2);
         temp.put("만화", 3);

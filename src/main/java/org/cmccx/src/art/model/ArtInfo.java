@@ -68,7 +68,7 @@ public class ArtInfo {
     }
 
     private boolean isSales(String status){
-        if (status.equals("F")) {
+        if (status.equals("F") || status.equals("E")) {
             return false;
         }
         return true;
