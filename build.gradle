@@ -23,13 +23,15 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:19.0.0'
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
-    implementation 'com.google.code.gson:gson:2.8.7'
-
     // Spring Boot Starter
     testImplementation ('org.springframework.boot:spring-boot-starter-test')
     implementation('org.springframework.boot:spring-boot-starter')
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket:2.7.5'
+
+
+    implementation 'org.jetbrains:annotations:19.0.0'
+    implementation 'com.google.code.gson:gson:2.8.7'
 
     // Web
     implementation ('org.springframework.boot:spring-boot-starter-web')
