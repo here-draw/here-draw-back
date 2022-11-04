@@ -2,6 +2,7 @@ package org.cmccx.src.art;
 
 import org.cmccx.config.BaseException;
 import org.cmccx.config.BaseResponse;
+import org.cmccx.config.Constant;
 import org.cmccx.src.art.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -33,18 +34,22 @@ public class ArtController {
 
     /**
      * 메인: 작품 목록 조회 API
-     * [GET] /arts?category-id={category-id}&id={id}&date={date}&size={size}
+     * [GET] /arts?category={category}&id={id}&date={date}&size={size}
      * @return BaseResponse<GetArtsRes>
      */
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<GetArtsRes> getArts(@RequestParam(value = "category-id", defaultValue = "0") @Min(value = 0, message = "유효하지 않은 카테고리입니다.") @Max(value = 5, message = "유효하지 않은 카테고리입니다.") int categoryId,
+    public BaseResponse<GetArtsRes> getArts(@RequestParam(value = "category", defaultValue = "전체") String category,
                                             @RequestParam(value = "id", defaultValue = "0") long artId,
                                             @RequestParam(value = "date", defaultValue = "") String date,
                                             @RequestParam(value = "size", defaultValue = "10000") int size) throws BaseException {
+        // 다음날로 날짜 지정
         if (date.isEmpty()){
             date = LocalDate.now().plusDays(1).toString();
         }
+
+        // 카테고리 ID 선택
+        int categoryId = Constant.getCategoryId(category);
 
         GetArtsRes result = artProvider.getArts(categoryId, artId, date, size);
 

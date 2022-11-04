@@ -29,6 +29,36 @@ public class ArtProvider {
         this.jwtService = jwtService;
     }
 
+    /** 작품 ID 확인 **/
+    public int checkArt(long artId) throws BaseException {
+        try {
+            return artDao.checkArt(artId);
+        } catch (Exception e){
+            logger.error("CheckArtId Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    /** 작품 상태 조회 **/
+    public String checkArtStatus(long artId) throws BaseException {
+        try {
+            return artDao.checkArtStatus(artId);
+        } catch (Exception e){
+            logger.error("CheckArtStatus Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    /** 작품 판매 수량 조회 **/
+    public int checkArtSales(long artId) throws BaseException {
+        try {
+            return artDao.selectSales(artId);
+        } catch (Exception e){
+            logger.error("CheckArtSales Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     /** 작가-작품 관계 확인 **/
     public int checkUserArt(long userId, long artId) throws BaseException {
         try {
@@ -92,7 +122,7 @@ public class ArtProvider {
             long userId = jwtService.getUserId();
 
             // 작가ID 확인
-            int isUser = artDao.checkUser(artistId);
+            int isUser = artDao.checkUser(artistId); /**user도메인으로 변경**/
             if (isUser == 0){
                 throw new BaseException(BAD_REQUEST);
             }
@@ -123,13 +153,22 @@ public class ArtProvider {
     /** 작품 상세 조회 **/
     public GetArtByArtIdRes getArtByArtId(long artId) throws BaseException {
         try {
+            // 회원 검증 및 ID 추출
+            long userId = jwtService.getUserId();
+
             // 작품ID 확인
             int isArt = artDao.checkArt(artId);
             if (isArt == 0){
                 throw new BaseException(FAILED_ACCESS_ART);
             }
 
+            // 작품 상세 정보 조회
             GetArtByArtIdRes result = artDao.selectArtByArtId(artId);
+
+            // 내 작품 조회인지 확인
+            if (userId == result.getArtistId()) {
+                result.setMyArt(true);
+            }
             return result;
 
         } catch (BaseException e) {
