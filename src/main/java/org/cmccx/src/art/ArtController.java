@@ -99,6 +99,19 @@ public class ArtController {
     }
 
     /**
+     * 최근 본 작품 조회 API
+     * [GET] /arts/recent-view
+     * @return BaseResponse<List<ArtInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/recent-view")
+    public BaseResponse<List<ArtInfo>> getRecentArts() throws BaseException {
+        List<ArtInfo> result = artProvider.getRecentArts();
+
+        return new BaseResponse<>(result);
+    }
+
+    /**
      * 작품 등록 API
      * [POST] /arts
      * @return BaseResponse<Long>
@@ -147,6 +160,19 @@ public class ArtController {
     @DeleteMapping("/{art-id}")
     public BaseResponse<String> removeArt(@PathVariable("art-id") long artId) throws BaseException {
         String result = artService.removeArt(artId);
+
+        return new BaseResponse<>(result);
+    }
+
+    /**
+     * 최근 본 작품 전체 삭제 API
+     * [DELETE] /arts/recent-view
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @DeleteMapping("/recent-view")
+    public BaseResponse<String> removeAllRecentArt() throws BaseException {
+        String result = artService.removeAllRecentArt();
 
         return new BaseResponse<>(result);
     }

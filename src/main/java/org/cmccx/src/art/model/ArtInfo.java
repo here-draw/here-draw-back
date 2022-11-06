@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 
 @Getter
-@JsonPropertyOrder({"artId", "artImage", "width", "height", "title"})
+@JsonPropertyOrder({"artId", "artistId", "artImage", "width", "height", "title"})
 public class ArtInfo {
     private long artId;
+
+    private long artistId;
 
     private String artImage;
 
@@ -34,8 +36,9 @@ public class ArtInfo {
     private Boolean sales;
 
     // 메인: 작품 조회
-    public ArtInfo(long artId, String artImage, int width, int height, String title, String date) {
+    public ArtInfo(long artId, long artistId, String artImage, int width, int height, String title, String date) {
         this.artId = artId;
+        this.artistId = artistId;
         this.artImage = artImage;
         this.width = width;
         this.height = height;
@@ -44,20 +47,29 @@ public class ArtInfo {
     }
 
     // 추천 작품 조회
-    public ArtInfo(long artId, String artImage, int count) {
+    public ArtInfo(long artId, long artistId, String artImage, int count) {
         this.artId = artId;
+        this.artistId = artistId;
         this.artImage = artImage;
         this.like = isLike(count);
     }
 
     // 작가별 작품 조회
-    public ArtInfo(long artId, String artImage, String title, int price, int count, String status){
+    public ArtInfo(long artId, long artistId, String artImage, String title, int price, int count, String status) {
         this.artId = artId;
+        this.artistId = artistId;
         this.artImage = artImage;
         this.title = title;
         this.price = price;
         this.like = isLike(count);
         this.sales = isSales(status);
+    }
+
+    // 최근 본 작품 조회
+    public ArtInfo(long artId, long artistId, String artImage) {
+        this.artId = artId;
+        this.artistId = artistId;
+        this.artImage = artImage;
     }
 
     private boolean isLike(int count){
