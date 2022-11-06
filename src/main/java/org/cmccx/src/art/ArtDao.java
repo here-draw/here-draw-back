@@ -63,7 +63,7 @@ public class ArtDao {
 
     /** 메인: 작품 조회(최신 등록순) **/
     public List<ArtInfo> selectArts(int categoryId, long artId, String date, int size){
-        StringBuilder query = new StringBuilder("SELECT art_id, art_image, image_width, image_height, title, created_at FROM art ");
+        StringBuilder query = new StringBuilder("SELECT art_id, user_id, art_image, image_width, image_height, title, created_at FROM art ");
         Object[] params;
 
         if (categoryId == 0){   // 전체 조회
@@ -83,6 +83,7 @@ public class ArtDao {
         return this.jdbcTemplate.query(query.toString(),
                 (rs, rowNum) -> new ArtInfo(
                         rs.getLong("art_id"),
+                        rs.getLong("user_id"),
                         rs.getString("art_image"),
                         rs.getInt("image_width"),
                         rs.getInt("image_height"),
@@ -93,7 +94,7 @@ public class ArtDao {
 
     /** 작가별 작품 조회 **/
     public List<ArtInfo> selectArsByUserId(long userId, long artistId, boolean isMyPage, long artId, int size){
-        StringBuilder query = new StringBuilder("SELECT art.art_id, art_image, title, price, IFNULL(user_like.art_id, 0)  AS count, art.status ");
+        StringBuilder query = new StringBuilder("SELECT art.art_id, art.user_id, art_image, title, price, IFNULL(user_like.art_id, 0)  AS count, art.status ");
         query.append("FROM art ");
         query.append("LEFT JOIN (SELECT art_id ");
         query.append("FROM gallery ");
@@ -115,7 +116,8 @@ public class ArtDao {
 
         return this.jdbcTemplate.query(query.toString(),
                 (rs, rowNum) -> new ArtInfo(
-                        rs.getLong("art_id"),
+                        rs.getLong("art.art_id"),
+                        rs.getLong("art.user_id"),
                         rs.getString("art_image"),
                         rs.getString("title"),
                         rs.getInt("price"),
@@ -127,7 +129,7 @@ public class ArtDao {
 
     /** 추천 작품 조회 **/
     public List<ArtInfo> selectRecommendedArts(long userId, long artId){
-        String query = "SELECT art.art_id, art_image, IFNULL(user_like.art_id, 0) AS count " +
+        String query = "SELECT art.art_id, art.user_id, art_image, IFNULL(user_like.art_id, 0) AS count " +
                         "FROM art " +
                         "LEFT JOIN (SELECT art_id " +
                         "FROM gallery " +
@@ -141,6 +143,7 @@ public class ArtDao {
         return this.jdbcTemplate.query(query,
                 (rs, rowNum) -> new ArtInfo(
                         rs.getLong("art.art_id"),
+                        rs.getLong("art.user_id"),
                         rs.getString("art_image"),
                         rs.getInt("count")),
                 userId, artId);
@@ -191,6 +194,21 @@ public class ArtDao {
         result.setTag(this.jdbcTemplate.query(tagQuery, (rs, rowNum) -> rs.getString("name"), artId));
 
         return result;
+    }
+
+    /** 최근 본 작품 조회 **/
+    public List<ArtInfo> selectRecentArts(long userId) {
+        String query = "SELECT recent_art.art_id, a.user_id, art_image " +
+                        "FROM recent_art " +
+                        "INNER JOIN art a ON recent_art.art_id = a.art_id " +
+                        "WHERE recent_art.user_id = ? AND a.status IN ('S', 'F', 'E')";
+
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ArtInfo(
+                    rs.getLong("recent_art.art_id"),
+                    rs.getLong("a.user_id"),
+                    rs.getString("art_image")),
+                userId);
     }
 
     /** 작품 등록 **/
@@ -289,6 +307,12 @@ public class ArtDao {
         }).length;
     }
 
+    /** 최근 본 작품 등록 **/
+    public void insertRecentArt(long userId, long artId) {
+        String query = "INSERT INTO recent_art(user_id, art_id) VALUES (?, ?)";
+        this.jdbcTemplate.update(query, userId, artId);
+    }
+
     /** 작품 수정 **/
     public int updateArt(long artId, PutArtReq putArtReq){
         String query = "UPDATE art " +
@@ -340,6 +364,13 @@ public class ArtDao {
         String query = "DELETE FROM art_tag WHERE art_id =?";
 
         return this.jdbcTemplate.update(query, artId);
+    }
+
+    /** 최근 본 작품 전체 삭제 **/
+    public int deleteAllRecentArts(long userId) {
+        String query = "DELETE FROM recent_art WHERE user_id = ?";
+
+        return this.jdbcTemplate.update(query, userId);
     }
 
 }

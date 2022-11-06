@@ -247,4 +247,25 @@ public class ArtService {
         }
     }
 
+    /** 최근 본 작품 삭제 **/
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
+    public String removeAllRecentArt() throws BaseException {
+        try {
+            // 회원 검증 및 ID 추출
+            long userId = jwtService.getUserId();
+
+            // 삭제
+            int result = artDao.deleteAllRecentArts(userId);
+
+            String message = "삭제되었습니다.";
+            return message;
+
+        } catch (BaseException e){
+            throw new BaseException(e.getStatus());
+        } catch (Exception e){
+            logger.error("DeleteRecentArt Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 }
