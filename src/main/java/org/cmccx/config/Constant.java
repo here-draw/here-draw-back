@@ -6,8 +6,16 @@ import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
 
 public class Constant {
 
-    public static final int USER = 0;
-    public static final int ART = 1;
+    public enum ReportType {
+        USER,
+        Art;
+    }
+
+    public enum RoomType {
+        DIRECT_MESSAGE,
+        INQUIRY,
+        PURCHASE;
+    }
 
     // 카테고리
     public static final Map<String, Integer> CATEGORY;
@@ -101,9 +109,9 @@ public class Constant {
         return categoryId;
     }
 
-    public static int getReportId(int type, String report) throws BaseException {
+    public static int getReportId(ReportType type, String report) throws BaseException {
         Integer reportId;
-        if (type == 0) { // 회원 신고
+        if (type == ReportType.USER) { // 회원 신고
             reportId = USER_REPORT.get(report);
         } else {    // 작품 신고
             reportId = ART_REPORT.get(report);
