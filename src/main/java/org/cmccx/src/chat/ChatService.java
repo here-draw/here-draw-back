@@ -1,8 +1,11 @@
 package org.cmccx.src.chat;
 
 import org.cmccx.config.BaseException;
+import org.cmccx.config.Constant.RoomType;
 import org.cmccx.src.art.ArtProvider;
-import org.cmccx.src.chat.model.GetChatRoomsRes;
+import org.cmccx.src.chat.model.ChatMessageReq;
+import org.cmccx.src.chat.model.GetChatRoomInfoRes;
+import org.cmccx.src.chat.model.GetExistentChatRoomData;
 import org.cmccx.src.chat.model.PostChatRoomForArtReq;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
@@ -12,38 +15,47 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static org.cmccx.config.BaseResponseStatus.DATABASE_ERROR;
-import static org.cmccx.config.BaseResponseStatus.FAILED_ACCESS_ART;
+import static org.cmccx.config.BaseResponseStatus.*;
 
 @Service
 public class ChatService {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatProvider chatProvider;
     private final ChatDao chatDao;
     private final ArtProvider artProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public ChatService(SimpMessagingTemplate messagingTemplate, ChatDao chatDao, ArtProvider artProvider, JwtService jwtService) {
+    public ChatService(SimpMessagingTemplate messagingTemplate, ChatProvider chatProvider, ChatDao chatDao, ArtProvider artProvider, JwtService jwtService) {
         this.messagingTemplate = messagingTemplate;
+        this.chatProvider = chatProvider;
         this.chatDao = chatDao;
         this.artProvider = artProvider;
         this.jwtService = jwtService;
     }
 
-    /** 작품 문의 또는 구매 채팅방 생성 **/
+    /** 메세지 저장 **/
+    public void registerMessage(ChatMessageReq messageInfo) throws BaseException {
+        try {
+            chatDao.insertMessage(messageInfo);
+        } catch (Exception e) {
+            logger.error("RegisterMessage Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    /** 작품 문의 및 구매 채팅방 생성 **/
     @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
-    public void createChatRoomForArt(PostChatRoomForArtReq postChatRoomForArtReq) throws BaseException {
+    public GetChatRoomInfoRes createChatRoomForArt(PostChatRoomForArtReq postChatRoomForArtReq) throws BaseException {
         try {
              //회원 검증 및 ID 추출
              long userId = jwtService.getUserId();
 
 //            // 채팅 상대 ID 유효성 검사
 //            if (isValidUser == 0) {
-//                throw new BaseException();    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
+//                throw new BaseException(FAILED_ACCESS_USER);    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
 //            }
 
             // 작품 ID 유효성 검사
@@ -52,13 +64,29 @@ public class ChatService {
                 throw new BaseException(FAILED_ACCESS_ART);
             }
 
-            // 채팅방 존재 여부 확인
-            // 채팅방이 있고, 유저에 따라 나갔던 채팅방인 경우 다시 살리거나 새로 연결시킴
+            // 작품 채팅방 존재 여부 확인
+            GetExistentChatRoomData chatRoom = chatProvider.checkExistentChatRoom(RoomType.INQUIRY, postChatRoomForArtReq.getArtId(), userId, postChatRoomForArtReq.getArtistId());
+            // 채팅방이 있는 경우
+            if (chatRoom.isExistent()) {
+                long roomId = chatRoom.getRoomId();
+                // 채팅방 정보 업데이트
+                chatDao.updateChatRoom(roomId, postChatRoomForArtReq);
+                // 채팅방을 나간 회원 재연결
+                if (chatRoom.getUserStatus().equals("I")) {
+                    chatDao.updateUserChatRoom(userId, roomId);
+                } else if (chatRoom.getContactUserStatus().equals("I")) {
+                    chatDao.updateUserChatRoom(postChatRoomForArtReq.getArtistId(), roomId);
+                }
 
+                return chatProvider.getChatRoomInfo(roomId);
+            }
             // 채팅방 생성
-            int roomId = chatDao.insertChatRoom(postChatRoomForArtReq);
+            long roomId = chatDao.insertChatRoom(postChatRoomForArtReq);
             // 회원마다 채팅방 연결
             chatDao.insertUserChatRoom(new long[]{userId, postChatRoomForArtReq.getArtistId()} ,roomId);
+
+            return chatProvider.getChatRoomInfo(roomId);
+
         } catch (BaseException e) {
             throw new BaseException(e.getStatus());
         } catch (Exception e) {
@@ -67,12 +95,77 @@ public class ChatService {
         }
     }
 
-    /** DM 채팅방 생성 **/
-    public void createChatRoomForArtist(long userId) {
+    /** 작가에게 DM 채팅방 생성 **/
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
+    public GetChatRoomInfoRes createChatRoomForArtist(PostChatRoomForArtReq postChatRoomForArtReq) throws BaseException {
+        try {
+            //회원 검증 및 ID 추출
+            long userId = jwtService.getUserId();
 
+//            // 채팅 상대 ID 유효성 검사
+//            if (isValidUser == 0) {
+//                throw new BaseException(FAILED_ACCESS_USER);    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
+//            }
+
+            // DM 채팅방 존재 여부 확인
+            GetExistentChatRoomData chatRoom = chatProvider.checkExistentChatRoom(RoomType.DIRECT_MESSAGE, 0, userId, postChatRoomForArtReq.getArtistId());
+            // 채팅방이 있는 경우
+            if (chatRoom.isExistent()) {
+                long roomId = chatRoom.getRoomId();
+
+                // 채팅방을 나간 회원 재연결
+                if (chatRoom.getUserStatus().equals("I")) {
+                    chatDao.updateUserChatRoom(userId, roomId);
+                } else if (chatRoom.getContactUserStatus().equals("I")) {
+                    chatDao.updateUserChatRoom(postChatRoomForArtReq.getArtistId(), roomId);
+                }
+
+                return chatProvider.getChatRoomInfo(roomId);
+            }
+            // 채팅방 생성
+            long roomId = chatDao.insertChatRoom(postChatRoomForArtReq);
+            // 회원마다 채팅방 연결
+            chatDao.insertUserChatRoom(new long[]{userId, postChatRoomForArtReq.getArtistId()} ,roomId);
+
+            return chatProvider.getChatRoomInfo(roomId);
+
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch (Exception e) {
+            logger.error("CreateChatRoomForArtist Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 
+    /** 채팅방 나가기 **/
+    public String exitChatRoom(long roomId) throws BaseException {
+        try {
+            //회원 검증 및 ID 추출
+            long userId = jwtService.getUserId();
 
+            // 채팅방 소유 여부 확인
+            int isValid = chatProvider.checkUserChatRoom(roomId, userId);
+            if (isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
+            // 채팅방과 회원 매핑 관계 해제
+            boolean isDisabled = chatDao.deleteUserChatRoom(userId, roomId);
+            if (isDisabled) { // 양쪽 회원이 모두 채팅방에 없을 경우, 채팅방 완전 삭제
+                int row = chatDao.deleteChatRoom(roomId);
+                if (row == 0){
+                    throw new BaseException(BAD_REQUEST);
+                }
+            }
 
+            String result = "채팅방에서 나갔습니다.";
+            return result;
+
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch (Exception e) {
+            logger.error("CreateChatRoomForArtist Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }

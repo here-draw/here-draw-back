@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class GetChatRoomsRes {
     private long roomId;
-    private long ArtistId;
+    private long contactUserId;
     private String nickname;
     private String profileImage;
     private String artImage;
