@@ -1,7 +1,7 @@
 package org.cmccx.src.report;
 
 import org.cmccx.config.BaseException;
-import org.cmccx.config.Constant;
+import org.cmccx.config.Constant.ReportType;
 import org.cmccx.src.art.ArtProvider;
 import org.cmccx.src.report.model.PostReportReq;
 import org.cmccx.utils.JwtService;
@@ -15,6 +15,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 
 import static org.cmccx.config.BaseResponseStatus.*;
+import static org.cmccx.config.Constant.getReportId;
 
 @Service
 public class ReportService {
@@ -40,7 +41,7 @@ public class ReportService {
             // 신고 접수한 회원ID 추출 및 검증
             long userId = jwtService.getUserId();
 
-            postReportReq.setReportTypeId(Constant.getReportId(Constant.USER, postReportReq.getReportType()));  // 신고 유형 ID 등록
+            postReportReq.setReportTypeId(getReportId(ReportType.USER, postReportReq.getReportType()));  // 신고 유형 ID 등록
             int reportCount = reportDao.insertUserReport(userId, postReportReq);    // 신고 등록
 
             // 신고 3회 누적 시, 3일간 차단
@@ -77,7 +78,7 @@ public class ReportService {
                 throw new BaseException(BAD_REQUEST);
             }
 
-            postReportReq.setReportTypeId(Constant.getReportId(Constant.ART, postReportReq.getReportType()));   // 신고 유형 ID 등록
+            postReportReq.setReportTypeId(getReportId(ReportType.Art, postReportReq.getReportType()));   // 신고 유형 ID 등록
             reportCount = reportDao.insertArtReport(userId, postReportReq);    // 신고 등록
 
             // 신고 3회 누적 시, 작품 차단
