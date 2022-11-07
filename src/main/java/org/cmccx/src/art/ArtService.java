@@ -256,6 +256,9 @@ public class ArtService {
 
             // 삭제
             int result = artDao.deleteAllRecentArts(userId);
+            if (result == 0){
+                throw new BaseException(BAD_REQUEST);
+            }
 
             String message = "삭제되었습니다.";
             return message;
