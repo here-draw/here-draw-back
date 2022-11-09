@@ -48,7 +48,7 @@ public enum BaseResponseStatus {
     INVALID_IMAGE_WIDTH_HEIGHT(false, 2504, "이미지 크기를 확인할 수 없습니다."),
     EXCLUSIVE_SALE_ART(false, 2505, "독점 판매된 작품은 삭제할 수 없습니다."),
     EXCEEDED_ART_QUANTITY(false, 2506, "판매 수량보다 적은 값은 입력할 수 없습니다."),
-
+    DUPLICATED_GALLERY_NAME(false, 2507, "이미 등록된 갤러리명입니다."),
 
 
     /**
@@ -62,6 +62,7 @@ public enum BaseResponseStatus {
 
     FAILED_ACCESS_ART(false, 3501, "차단 또는 삭제된 작품입니다."),
     FAILED_ACCESS_USER(false, 3502, "차단 또는 탈퇴한 회원입니다."),
+    FAILED_ACCESS_ARTICLE(false, 3503, "차단 또는 삭제된 아티클 컴필레이션입니다."),
 
 
 
