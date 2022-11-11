@@ -1,11 +1,13 @@
 package org.cmccx.src.trade;
 
+import org.cmccx.src.art.model.ArtInfo;
 import org.cmccx.src.trade.model.PostTradeConfirmReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @Repository
 public class TradeDao {
@@ -16,8 +18,8 @@ public class TradeDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    /** 거래 상태 확인 **/
-    public String getTradeStatus(long roomId) {
+    /** 거래 상태 조회 **/
+    public String selectTradeStatus(long roomId) {
         try {
             String query = "SELECT status " +
                     "FROM purchase_history " +
@@ -26,6 +28,22 @@ public class TradeDao {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** 구매 내역 조회 **/
+    public List<ArtInfo> selectPurchaseHistory(long userId) {
+        String query = "SELECT a.art_id, a.user_id, art_image, title, price " +
+                        "FROM purchase_history p " +
+                        "INNER JOIN art a on p.art_id = a.art_id " +
+                        "WHERE buyer_id = ? AND p.status = 'A'";
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ArtInfo(
+                        rs.getLong("a.art_id"),
+                        rs.getLong("a.user_id"),
+                        rs.getString("art_image"),
+                        rs.getString("title"),
+                        rs.getInt("price")),
+                userId);
     }
 
     /** 거래 확정 **/
