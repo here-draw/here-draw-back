@@ -118,6 +118,27 @@ public class UserController {
     }
 
     /**
+     * 애플 로그인 API
+     * [POST] /users/apple
+     * @return BaseResponse<PostLoginRes>
+     */
+    @ResponseBody
+    @PostMapping("/apple")
+    public BaseResponse<PostLoginRes> loginByApple(@RequestBody @Valid PostLoginReq appleToken) throws BaseException {
+        try {
+            String identityToken = appleToken.getAccessToken();
+            PostLoginRes loginRes = userService.loginByApple(identityToken);
+
+            return new BaseResponse<>(loginRes);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch(Exception e) {
+            logger.error("LoginByApple Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
      * 초기 닉네임 설정 API
      * [PATCH] /users/nickname
      * @return BaseResponse<String>
