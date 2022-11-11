@@ -48,32 +48,18 @@ public class AppleService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode arrNode = objectMapper.readTree(result).get("keys");
-        String header_kid = header.get("kid");
-        String header_alg = header.get("alg");
-        String arrKid = null;
-        String arrAlg = null;
+        String header_kid = header.get("kid").replaceAll("\"", "");
+        String header_alg = header.get("alg").replaceAll("\"", "");
         if (arrNode.isArray()) {
             for (JsonNode objNode : arrNode) {
-                arrKid = objNode.get("kid").toString();
-                arrAlg = objNode.get("alg").toString();
-                if(arrKid.equals(header_kid)) {
+                if(objNode.get("kid").toString().replaceAll("\"", "").equals(header_kid)) {
                     System.out.println("same kid");
-                    if(arrAlg.equals(header_alg)) {
+                    if(objNode.get("alg").toString().replaceAll("\"", "").equals(header_alg)) {
                         System.out.println("same alg");
                         availableObject = objNode;
                         break;
                     }
                 }
-                /*
-                if (objNode.get("kid").toString().trim().equals(header.get("kid").trim())) {
-                    System.out.println("same kid");
-                    if (objNode.get("alg").toString().trim().equals(header.get("alg").trim())) {
-                        System.out.println("same alg");
-                        availableObject = objNode;
-                        break;
-                    }
-                }
-                 */
             }
         }
         if (availableObject == null) {
