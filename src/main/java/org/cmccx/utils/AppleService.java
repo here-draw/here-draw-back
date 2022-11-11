@@ -55,8 +55,13 @@ public class AppleService {
         JsonNode arrNode = objectMapper.readTree(result).get("keys");
         if (arrNode.isArray()) {
             for (JsonNode objNode : arrNode) {
-                if (objNode.get("kid").equals(header.get("kid"))) {
-                    if (objNode.get("alg").equals(header.get("alg"))) {
+                System.out.println(objNode.get("kid"));
+                System.out.println(objNode.get("kid").toString());
+
+                if (objNode.get("kid").toString().equals(header.get("kid"))) {
+                    System.out.println("same kid");
+                    if (objNode.get("alg").toString().equals(header.get("alg"))) {
+                        System.out.println("same alg");
                         availableObject = objNode;
                         break;
                     }
