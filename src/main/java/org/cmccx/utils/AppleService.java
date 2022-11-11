@@ -38,11 +38,6 @@ public class AppleService {
     public Key getMatchedKey(Map<String, String> header) throws BaseException, JsonProcessingException {
         String reqURL = "https://appleid.apple.com/auth/keys";
 
-        System.out.println("this is getMachedKey method!");
-        System.out.println(header.get("kid"));
-        System.out.println(header.get("alg"));
-        System.out.println("!!!&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-
         // HTTP Request
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(reqURL, String.class);
@@ -53,19 +48,32 @@ public class AppleService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode arrNode = objectMapper.readTree(result).get("keys");
+        String header_kid = header.get("kid");
+        String header_alg = header.get("alg");
+        String arrKid = null;
+        String arrAlg = null;
         if (arrNode.isArray()) {
             for (JsonNode objNode : arrNode) {
-                System.out.println(objNode.get("kid"));
-                System.out.println(objNode.get("kid").toString());
-
-                if (objNode.get("kid").toString().equals(header.get("kid"))) {
+                arrKid = objNode.get("kid").toString();
+                arrAlg = objNode.get("alg").toString();
+                if(arrKid.equals(header_kid)) {
                     System.out.println("same kid");
-                    if (objNode.get("alg").toString().equals(header.get("alg"))) {
+                    if(arrAlg.equals(header_alg)) {
                         System.out.println("same alg");
                         availableObject = objNode;
                         break;
                     }
                 }
+                /*
+                if (objNode.get("kid").toString().trim().equals(header.get("kid").trim())) {
+                    System.out.println("same kid");
+                    if (objNode.get("alg").toString().trim().equals(header.get("alg").trim())) {
+                        System.out.println("same alg");
+                        availableObject = objNode;
+                        break;
+                    }
+                }
+                 */
             }
         }
         if (availableObject == null) {
