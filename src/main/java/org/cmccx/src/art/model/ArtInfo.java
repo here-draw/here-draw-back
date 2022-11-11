@@ -65,6 +65,15 @@ public class ArtInfo {
         this.sales = isSales(status);
     }
 
+    // 구매한 작품 조회
+    public ArtInfo(long artId, long artistId, String artImage, String title, int price) {
+        this.artId = artId;
+        this.artistId = artistId;
+        this.artImage = artImage;
+        this.title = title;
+        this.price = price;
+    }
+
     // 최근 본 작품 조회
     public ArtInfo(long artId, long artistId, String artImage) {
         this.artId = artId;

@@ -2,6 +2,7 @@ package org.cmccx.src.trade;
 
 import org.cmccx.config.BaseException;
 import org.cmccx.config.BaseResponse;
+import org.cmccx.src.trade.model.GetPurchaseHistoryRes;
 import org.cmccx.src.trade.model.PostTradeConfirmReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,21 @@ public class TradeController {
     }
 
     /**
+     * 구매 확정 API
+     * [GET] /trades
+     * @return BaseResponse<GetPurchaseHistoryRes>
+     */
+    @ResponseBody
+    @GetMapping("")
+    public BaseResponse<GetPurchaseHistoryRes> getPurchaseHistory() throws BaseException {
+        GetPurchaseHistoryRes result = tradeProvider.getPurchaseHistory();
+
+        return new BaseResponse<>(result);
+    }
+
+    /**
      * 거래 확정 API
-     * [POST] /trades/{roomId}
+     * [POST] /trades
      * @return BaseResponse<String>
      */
     @ResponseBody
