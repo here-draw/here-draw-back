@@ -85,6 +85,9 @@ buildNumber.properties
 # ignore secret
 /src/main/java/org/cmccx/config/secret/Secret.java
 
+# ignore AuthKey file
+/src/main/resources/apple
+
 # ignore profile files
 /src/main/resources/application-dev.yml
 /src/main/resources/application-local.yml

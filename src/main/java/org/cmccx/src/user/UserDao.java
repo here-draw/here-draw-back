@@ -44,6 +44,12 @@ public class UserDao {
         this.jdbcTemplate.update(query, status, userId);
     }
 
+    /** 유저 상태 조회 **/
+    public String getUserStatus(long userId){
+        String query = "SELECT status from user WHERE user_id = ?";
+
+        return this.jdbcTemplate.queryForObject(query, String.class, userId);
+    }
 
     // 회원 가입 여부 확인 및 닉네임/상태 확인
     public UserInfo checkUser(String socialType, long socialId) {
@@ -98,6 +104,12 @@ public class UserDao {
         this.jdbcTemplate.update(query);
     }
 
+    // userId 체크
+    public int checkUserId(long userId) {
+        String query = "SELECT EXISTS(SELECT user_id from profile where user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId);
+    }
+
     // 닉네임 중복 체크
     public int checkNickname(String nickname) {
         String query = "SELECT EXISTS(SELECT nickname from profile where nickname = ?)";
@@ -121,6 +133,44 @@ public class UserDao {
                 );
     }
 
+    // 마이페이지 - 유저 정보(팔로우 수, 팔로잉 수, 작품찜 수) 조회
+    public LikeInfo getLikeInfo(long userId) {
+        String query = "SELECT COUNT(CASE WHEN target_user_id= ? THEN 1 END) AS followerCnt,\n" +
+                "       COUNT(CASE WHEN follower_id = ? THEN 1 END) AS followingCnt,\n" +
+                "       (SELECT COUNT(*)\n" +
+                "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt\n" +
+                "FROM follow";
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new LikeInfo(
+                        rs.getInt("followerCnt"),
+                        rs.getInt("followingCnt"),
+                        rs.getInt("likeCnt")),
+                userId, userId, userId);
+    }
+
+    // 작가 정보 조회
+    public ArtistInfo getArtistInfo(long userId, long artistId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname, p.description,\n" +
+                "       COUNT(CASE WHEN target_user_id= ? THEN 1 END) AS followerCnt,\n" +
+                "       COUNT(CASE WHEN follower_id= ? THEN 1 END) AS followingCnt,\n" +
+                "       (SELECT COUNT(*)\n" +
+                "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt,\n" +
+                "       (SELECT EXISTS(SELECT * from follow f_c where f_c.follower_id = ? and f_c.target_user_id = ?)) as isFollowing\n" +
+                "FROM follow f\n" +
+                "INNER JOIN profile p on p.user_id = ?;";
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new ArtistInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        rs.getString("description"),
+                        rs.getInt("followerCnt"),
+                        rs.getInt("followingCnt"),
+                        rs.getInt("likeCnt"),
+                        rs.getInt("isFollowing") == 1 ? true : false),
+                artistId, artistId, artistId, userId, artistId, artistId);
+    }
+
+
     // 프로필 정보 수정
     public void modifyProfileInfo(long userId, String nickname, String description) {
         String query = "UPDATE profile SET nickname = ?, description = ? where user_id = ?";
@@ -138,4 +188,30 @@ public class UserDao {
         String query = "SELECT profile_image from profile where user_id = " + userId;
         return this.jdbcTemplate.queryForObject(query, String.class);
     }
+
+    // FollowList 체크
+    public int checkFollowList(long userId, long targetId) {
+        String query = "SELECT EXISTS(SELECT follower_id from follow where follower_id = ? and target_user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId, targetId);
+    }
+
+    // FollowList 수정
+    public int patchFollowList(long userId, long targetId, String status) {
+        String checkStatusQuery = "select status from follow where follower_id = ? and target_user_id = ?";
+        String statusCheck = this.jdbcTemplate.queryForObject(checkStatusQuery, (rs, rowNum) -> rs.getString("status"), userId, targetId);
+        if(statusCheck.equals(status)) {
+            return 0;
+        } else {
+            String patchFollowQuery = "update follow set status = ? where follower_id = ? and target_user_id = ?";
+            this.jdbcTemplate.update(patchFollowQuery, status, userId, targetId);
+            return 1;
+        }
+    }
+
+    public void postFollowList(long userId, long targetId) {
+        String createQuery = "insert into follow (follower_id, target_user_id) VALUES (?,?)";
+        this.jdbcTemplate.update(createQuery, userId, targetId);
+    }
+
+
 }
