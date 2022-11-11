@@ -51,25 +51,20 @@ public class AppleService {
         String header_kid = header.get("kid").replaceAll("\"", "");
         String header_alg = header.get("alg").replaceAll("\"", "");
         if (arrNode.isArray()) {
-            for (JsonNode objNode : arrNode) {
-                if(objNode.get("kid").toString().replaceAll("\"", "").equals(header_kid)) {
-                    System.out.println("same kid");
+            for (JsonNode objNode : arrNode)
+                if(objNode.get("kid").toString().replaceAll("\"", "").equals(header_kid))
                     if(objNode.get("alg").toString().replaceAll("\"", "").equals(header_alg)) {
-                        System.out.println("same alg");
                         availableObject = objNode;
                         break;
                     }
-                }
-            }
         }
         if (availableObject == null) {
-            System.out.println("throw this exception: " + "INVALID_ACCESS_TOKEN");
             throw new BaseException(INVALID_ACCESS_TOKEN);
         }
         return objectMapper.treeToValue(availableObject, Key.class);
     }
 
-    public Claims getClaimsBy(String identityToken) {
+    public Claims getClaimsBy(String identityToken) throws BaseException {
         try {
             String headerOfIdentityToken = identityToken.substring(0, identityToken.indexOf("."));
             Map<String, String> header = new ObjectMapper().readValue(new String(Base64.getDecoder().decode(headerOfIdentityToken), "UTF-8"), Map.class);
@@ -94,6 +89,8 @@ public class AppleService {
 
             return userInfo;
 
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
         }
         /* catch (ExpiredJwtException e) {
             //토큰이 만료됐기 때문에 클라이언트는 토큰을 refresh 해야함.

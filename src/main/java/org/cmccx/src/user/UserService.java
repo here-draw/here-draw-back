@@ -153,15 +153,15 @@ public class UserService {
             Claims appleInfo = appleService.getClaimsBy(identityToken);
             System.out.println("this is apple Info !!!!!!!!!!!!!!!!!!!!");
             System.out.println(appleInfo.toString());
-            long socialId = appleInfo.get("sub", long.class);
+            long socialId = Long.parseLong(appleInfo.get("sub").toString());
             System.out.println("extracted socialId is : " + socialId);
 
             // 등록된 유저인지 확인
             UserInfo userInfo = userProvider.checkUser("A", socialId);
             if(userInfo == null){ // 미등록 유저
-                System.out.println("new user's email is : " + appleInfo.get("email", String.class));
+                System.out.println("new user's email is : " + appleInfo.get("email").toString());
                 // 회원가입
-                userId = userDao.insertUser("A", socialId, appleInfo.get("email", String.class), null);
+                userId = userDao.insertUser("A", socialId, appleInfo.get("email").toString(), null);
             } else {
                 userId = userInfo.getUserId();
                 nickname = userInfo.getNickname();
@@ -171,7 +171,7 @@ public class UserService {
                 } else if(status.equals("D")) {
                     // 탈퇴 회원 -> 가입 가능한 날짜인지 확인, 가입 처리.
                     checkEnableDate(userId, status);
-                    userId = userDao.insertUser("A", socialId, appleInfo.get("email", String.class), null);
+                    userId = userDao.insertUser("A", socialId, appleInfo.get("email").toString(), null);
                 } else if(status.equals("P")) {
                     // 영구 차단
                     throw new BaseException(BLOCKED_SIGNUP);
