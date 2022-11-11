@@ -154,10 +154,12 @@ public class UserService {
             System.out.println("this is apple Info !!!!!!!!!!!!!!!!!!!!");
             System.out.println(appleInfo.toString());
             long socialId = appleInfo.get("sub", long.class);
+            System.out.println("extracted socialId is : " + socialId);
 
             // 등록된 유저인지 확인
             UserInfo userInfo = userProvider.checkUser("A", socialId);
             if(userInfo == null){ // 미등록 유저
+                System.out.println("new user's email is : " + appleInfo.get("email", String.class));
                 // 회원가입
                 userId = userDao.insertUser("A", socialId, appleInfo.get("email", String.class), null);
             } else {
@@ -182,7 +184,7 @@ public class UserService {
         } catch (BaseException e) {
             throw new BaseException(e.getStatus(), e.getMessage());
         } catch (Exception e) {
-            logger.error("Kakao Login Fail", e);
+            logger.error("Apple Login Fail", e);
             throw new BaseException(FAILED_TO_LOGIN);
         }
     }

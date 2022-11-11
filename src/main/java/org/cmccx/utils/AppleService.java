@@ -38,6 +38,11 @@ public class AppleService {
     public Key getMatchedKey(Map<String, String> header) throws BaseException, JsonProcessingException {
         String reqURL = "https://appleid.apple.com/auth/keys";
 
+        System.out.println("this is getMachedKey method!");
+        System.out.println(header.get("kid"));
+        System.out.println(header.get("alg"));
+        System.out.println("!!!&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+
         // HTTP Request
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(reqURL, String.class);
@@ -59,6 +64,7 @@ public class AppleService {
             }
         }
         if (availableObject == null) {
+            System.out.println("throw this exception: " + "INVALID_ACCESS_TOKEN");
             throw new BaseException(INVALID_ACCESS_TOKEN);
         }
         return objectMapper.treeToValue(availableObject, Key.class);
@@ -70,6 +76,10 @@ public class AppleService {
             Map<String, String> header = new ObjectMapper().readValue(new String(Base64.getDecoder().decode(headerOfIdentityToken), "UTF-8"), Map.class);
 
             AppleService.Key key = getMatchedKey(header);
+            System.out.println("returned key info");
+            System.out.println(key.getN());
+            System.out.println(key.getE());
+            System.out.println("++++++++++++++++++++++++++++++++++");
 
             byte[] nBytes = Base64.getUrlDecoder().decode(key.getN());
             byte[] eBytes = Base64.getUrlDecoder().decode(key.getE());
