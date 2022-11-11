@@ -44,6 +44,12 @@ public class UserDao {
         this.jdbcTemplate.update(query, status, userId);
     }
 
+    /** 유저 상태 조회 **/
+    public String getUserStatus(long userId){
+        String query = "SELECT status from user WHERE user_id = ?";
+
+        return this.jdbcTemplate.queryForObject(query, String.class, userId);
+    }
 
     // 회원 가입 여부 확인 및 닉네임/상태 확인
     public UserInfo checkUser(String socialType, long socialId) {

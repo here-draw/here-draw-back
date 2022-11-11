@@ -45,6 +45,23 @@ public class UserService {
         this.fileService = fileService;
     }
 
+    /** 자동 로그인 **/
+    @Transactional(rollbackFor = Exception.class)
+    public void login(long userId) throws BaseException{
+        try {
+            String status = userDao.getUserStatus(userId);
+            if(!status.equals("A")) {
+                throw new BaseException(BLOCKED_LOGIN, "로그인 불가능한 유저입니다. (" + status + ")");
+            }
+            userDao.updateLoginDate(userId);
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch (Exception e) {
+            logger.error("Auto Login Fail", e);
+            throw new BaseException(FAILED_TO_LOGIN);
+        }
+    }
+
     /** 카카오로 로그인 **/
     @Transactional(rollbackFor = Exception.class)
     public PostLoginRes loginByKakao(String accessToken) throws BaseException{

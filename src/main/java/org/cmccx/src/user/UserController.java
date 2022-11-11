@@ -75,6 +75,28 @@ public class UserController {
     }
 
     /**
+     * 자동 로그인 API
+     * [POST] /users/login
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PatchMapping("/login")
+    public BaseResponse<String> login() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.login(userIdByJwt);
+
+            String result = "로그인에 성공하였습니다.";
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch(Exception e) {
+            logger.error("Auto Login Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
      * 카카오로 로그인 API
      * [POST] /users/kakao
      * @return BaseResponse<PostLoginRes>
