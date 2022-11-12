@@ -37,7 +37,7 @@ public class UserProvider {
     }
 
     // 회원 가입 여부 확인
-    public UserInfo checkUser(String socialType, long socialId) throws BaseException {
+    public UserInfo checkUser(String socialType, String socialId) throws BaseException {
         try {
             return userDao.checkUser(socialType, socialId);
         } catch (Exception e){

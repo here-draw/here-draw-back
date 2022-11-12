@@ -41,22 +41,21 @@ public class AppleService {
         // HTTP Request
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(reqURL, String.class);
-        System.out.println(result);
 
         //써야하는 Element (kid, alg 일치하는 element)
         JsonNode availableObject = null;
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode arrNode = objectMapper.readTree(result).get("keys");
+        String header_kid = header.get("kid").replaceAll("\"", "");
+        String header_alg = header.get("alg").replaceAll("\"", "");
         if (arrNode.isArray()) {
-            for (JsonNode objNode : arrNode) {
-                if (objNode.get("kid").equals(header.get("kid"))) {
-                    if (objNode.get("alg").equals(header.get("alg"))) {
+            for (JsonNode objNode : arrNode)
+                if(objNode.get("kid").toString().replaceAll("\"", "").equals(header_kid))
+                    if(objNode.get("alg").toString().replaceAll("\"", "").equals(header_alg)) {
                         availableObject = objNode;
                         break;
                     }
-                }
-            }
         }
         if (availableObject == null) {
             throw new BaseException(INVALID_ACCESS_TOKEN);
@@ -64,7 +63,7 @@ public class AppleService {
         return objectMapper.treeToValue(availableObject, Key.class);
     }
 
-    public Claims getClaimsBy(String identityToken) {
+    public Claims getClaimsBy(String identityToken) throws BaseException {
         try {
             String headerOfIdentityToken = identityToken.substring(0, identityToken.indexOf("."));
             Map<String, String> header = new ObjectMapper().readValue(new String(Base64.getDecoder().decode(headerOfIdentityToken), "UTF-8"), Map.class);
@@ -85,6 +84,8 @@ public class AppleService {
 
             return userInfo;
 
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
         }
         /* catch (ExpiredJwtException e) {
             //토큰이 만료됐기 때문에 클라이언트는 토큰을 refresh 해야함.
