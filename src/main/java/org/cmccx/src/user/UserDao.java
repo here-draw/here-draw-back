@@ -38,7 +38,7 @@ public class UserDao {
     }
 
     /** 유저 상태 수정 **/
-    public void updateUserStatus(long userId, char status){
+    public void updateUserStatus(long userId, String status){
         String query = "UPDATE user SET status = ? WHERE user_id = ?";
 
         this.jdbcTemplate.update(query, status, userId);
@@ -69,6 +69,12 @@ public class UserDao {
         } catch (EmptyResultDataAccessException e){
             return null;
         }
+    }
+
+    // 탈퇴 회원의 이전 userId 삭제
+    public void deletePrevUserId(long userId) {
+        String query = "UPDATE user SET social_type = '-', social_id = '-' WHERE user_id = ?";
+        this.jdbcTemplate.update(query, userId);
     }
 
     /** 휴면 회원 정보 가져오기 **/
