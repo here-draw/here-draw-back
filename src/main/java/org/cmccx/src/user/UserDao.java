@@ -23,7 +23,7 @@ public class UserDao {
     }
 
     /** 회원가입 **/
-    public long insertUser(String socialType, long socialId, String email, String profileImage) {
+    public long insertUser(String socialType, String socialId, String email, String profileImage) {
         String query = "INSERT INTO user (social_type, social_id, email) VALUES(?, ?, ?)";
         Object[] params = new Object[]{socialType, socialId, email};
         this.jdbcTemplate.update(query, params);
@@ -52,7 +52,7 @@ public class UserDao {
     }
 
     // 회원 가입 여부 확인 및 닉네임/상태 확인
-    public UserInfo checkUser(String socialType, long socialId) {
+    public UserInfo checkUser(String socialType, String socialId) {
         String query = "SELECT u.user_id, p.nickname, u.status " +
                 "FROM user u " +
                 "LEFT JOIN profile p ON u.user_id = p.user_id " +

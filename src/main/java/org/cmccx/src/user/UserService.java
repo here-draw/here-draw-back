@@ -80,15 +80,15 @@ public class UserService {
             // accessToken을 이용하여 유저 정보 추출
             String kakaoUserInfo = userProvider.getKakaoUserInfo(accessToken);
             JsonNode jsonNode = objectMapper.readTree(kakaoUserInfo);
-            long social_id = jsonNode.get("id").asLong();
+            String socialId = jsonNode.get("id").toString();
 
             // 등록된 유저인지 확인
-            UserInfo userInfo = userProvider.checkUser("K", social_id);
+            UserInfo userInfo = userProvider.checkUser("K", socialId);
 
             if(userInfo == null){ // 미등록 유저
                 // 회원가입
                 KakaoInfo kakaoInfo = getKakaoInfo(jsonNode);
-                userId = userDao.insertUser("K", social_id, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
+                userId = userDao.insertUser("K", socialId, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
             } else {
                 userId = userInfo.getUserId();
                 nickname = userInfo.getNickname();
@@ -110,7 +110,7 @@ public class UserService {
                         throw new BaseException(INVALID_SIGNUP_USER, enableSignUpDate.format(DateTimeFormatter.ofPattern("YYYY년 MM월 dd일")));
                     } else {
                         KakaoInfo kakaoInfo = getKakaoInfo(jsonNode);
-                        userId = userDao.insertUser("K", social_id, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
+                        userId = userDao.insertUser("K", socialId, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
                     }
                 } else if(status.equals("B")) {
                     // 차단 회원 -> 영구 차단이면 로그인 및 회원가입 불가, 차단 기한이 끝나지 않았으면 로그인 불가.
@@ -153,7 +153,7 @@ public class UserService {
             Claims appleInfo = appleService.getClaimsBy(identityToken);
             System.out.println("this is apple Info !!!!!!!!!!!!!!!!!!!!");
             System.out.println(appleInfo.toString());
-            long socialId = Long.parseLong(appleInfo.get("sub").toString());
+            String socialId = appleInfo.get("sub").toString();
             System.out.println("extracted socialId is : " + socialId);
 
             // 등록된 유저인지 확인
