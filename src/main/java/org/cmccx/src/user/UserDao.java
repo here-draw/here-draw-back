@@ -151,7 +151,8 @@ public class UserDao {
                 "       COUNT(CASE WHEN follower_id = ? THEN 1 END) AS followingCnt,\n" +
                 "       (SELECT COUNT(*)\n" +
                 "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt\n" +
-                "FROM follow";
+                "FROM follow\n" +
+                "WHERE status='A'";
         return this.jdbcTemplate.queryForObject(query,
                 (rs, rowNum) -> new LikeInfo(
                         rs.getInt("followerCnt"),
