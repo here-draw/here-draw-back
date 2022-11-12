@@ -9,7 +9,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
 
-import java.util.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -224,6 +223,19 @@ public class UserDao {
     public void postFollowList(long userId, long targetId) {
         String createQuery = "insert into follow (follower_id, target_user_id) VALUES (?,?)";
         this.jdbcTemplate.update(createQuery, userId, targetId);
+    }
+
+    public List<ProfileInfo> getFollowerList(long userId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname\n" +
+                "from follow f\n" +
+                "         INNER JOIN profile p on p.user_id = f.follower_id\n" +
+                "where f.target_user_id = ? and f.status = 'A'";
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        null
+                ), userId);
     }
 
     public List<ProfileInfo> getFollowingList(long userId) {

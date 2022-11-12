@@ -255,6 +255,27 @@ public class UserController {
     }
 
     /**
+     * 팔로워 목록 조회 API
+     * [GET] /users/follower-list
+     * @return BaseResponse<List<ProfileInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/follower-list")
+    public BaseResponse<List<ProfileInfo>> getFollowerList() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            List<ProfileInfo> profileInfoList = userProvider.getFollowerList(userIdByJwt);
+
+            return new BaseResponse<>(profileInfoList);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetFollowerList Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
      * 팔로잉 목록 조회 API
      * [GET] /users/following-list
      * @return BaseResponse<List<ProfileInfo>>
@@ -274,7 +295,6 @@ public class UserController {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
-
 
     /**
      * 팔로우 취소 API

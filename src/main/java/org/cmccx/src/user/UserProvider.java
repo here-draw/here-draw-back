@@ -111,6 +111,24 @@ public class UserProvider {
         }
     }
 
+    // 팔로워 목록 조회
+    public List<ProfileInfo> getFollowerList(long userId) throws BaseException {
+        try {
+            int check = userDao.checkUserId(userId);
+            if(check == 1) {
+                List<ProfileInfo> profileInfoList = userDao.getFollowerList(userId);
+                return profileInfoList;
+            } else {
+                throw new BaseException(INVALID_ACCESS_TOKEN);
+            }
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch (Exception e){
+            logger.error("GetFollowerList Error(UserDao)", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 팔로잉 목록 조회
     public List<ProfileInfo> getFollowingList(long userId) throws BaseException {
         try {
