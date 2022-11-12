@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 
 import java.util.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public class UserDao {
@@ -225,5 +226,16 @@ public class UserDao {
         this.jdbcTemplate.update(createQuery, userId, targetId);
     }
 
-
+    public List<ProfileInfo> getFollowingList(long userId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname\n" +
+                "from follow f\n" +
+                "         INNER JOIN profile p on p.user_id = f.target_user_id\n" +
+                "where f.follower_id = ? and f.status = 'A'";
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        null
+                ), userId);
+    }
 }
