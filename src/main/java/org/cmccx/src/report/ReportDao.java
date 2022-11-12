@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Repository
 public class ReportDao {
@@ -18,24 +20,30 @@ public class ReportDao {
     }
 
     /** 회원 신고 접수 **/
-    public int insertUserReport(long userId, PostReportReq postReportReq) {
-        String query = "INSERT INTO report(report_type_id, target_art_id, target_user_id, user_id) "
-                + "VALUES (?, ?, ?, ?)";
+        public Map<String, Integer> insertUserReport(long userId, PostReportReq postReportReq) {
+            Map<String, Integer> result = new HashMap<>();
+            String query = "INSERT IGNORE INTO report(report_type_id, target_art_id, target_user_id, user_id) " +
+                           "VALUES (?, ?, ?, ?)";
 
-        String countQuery = "SELECT COUNT(*) FROM report WHERE target_user_id = ? AND target_art_id IS NULL";
+            String countQuery = "SELECT COUNT(*) FROM report WHERE target_user_id = ? AND target_art_id IS NULL";
 
-        Object[] params = new Object[] {postReportReq.getReportTypeId(), postReportReq.getTargetArtId(),
+            Object[] params = new Object[] {postReportReq.getReportTypeId(), postReportReq.getTargetArtId(),
                 postReportReq.getTargetUserId(), userId};
 
-        this.jdbcTemplate.update(query, params);
+        int row = this.jdbcTemplate.update(query, params);
+        result.put("updateRow", row);
 
         // 회원 신고 횟수 반환
-        return this.jdbcTemplate.queryForObject(countQuery, int.class, params[2]);
+        int count = this.jdbcTemplate.queryForObject(countQuery, int.class, params[2]);
+        result.put("count", count);
+
+        return result;
     }
 
     /** 작품 신고 접수 **/
-    public int insertArtReport(long userId, PostReportReq postReportReq) {
-        String query = "INSERT INTO report(report_type_id, target_art_id, target_user_id, user_id) "
+    public Map<String, Integer> insertArtReport(long userId, PostReportReq postReportReq) {
+        Map<String, Integer> result = new HashMap<>();
+        String query = "INSERT IGNORE INTO report(report_type_id, target_art_id, target_user_id, user_id) "
                       + "VALUES (?, ?, ?, ?)";
 
         String countQuery = "SELECT COUNT(*) FROM report WHERE target_art_id = ?";
@@ -43,10 +51,14 @@ public class ReportDao {
         Object[] params = new Object[] {postReportReq.getReportTypeId(), postReportReq.getTargetArtId(),
                                         postReportReq.getTargetUserId(), userId};
 
-        this.jdbcTemplate.update(query, params);
+        int row = this.jdbcTemplate.update(query, params);
+        result.put("updateRow", row);
 
         // 작품 신고 횟수 반환
-        return this.jdbcTemplate.queryForObject(countQuery, int.class, params[1]);
+        int count =  this.jdbcTemplate.queryForObject(countQuery, int.class, params[1]);
+        result.put("count", count);
+
+        return result;
     }
 
     /** 총 신고 횟수 조회 **/
@@ -69,4 +81,5 @@ public class ReportDao {
 
         return this.jdbcTemplate.update(query, artId);
     }
-}
+
+    /** 영구 차단 **/}

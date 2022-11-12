@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Map;
 
 import static org.cmccx.config.BaseResponseStatus.*;
 import static org.cmccx.config.Constant.getReportId;
@@ -42,10 +43,15 @@ public class ReportService {
             long userId = jwtService.getUserId();
 
             postReportReq.setReportTypeId(getReportId(ReportType.USER, postReportReq.getReportType()));  // 신고 유형 ID 등록
-            int reportCount = reportDao.insertUserReport(userId, postReportReq);    // 신고 등록
+            Map<String, Integer> report = reportDao.insertUserReport(userId, postReportReq);    // 신고 등록
+
+            // 신고한 적이 있는 경우
+            if (report.get("updateRow") == 0) {
+                throw  new BaseException(DUPLICATED_REPORT);
+            }
 
             // 신고 3회 누적 시, 3일간 차단
-            if (reportCount % 3 == 0) {
+            if (report.get("count") % 3 == 0) {
                 /** 채팅 관련 데이터 삭제 후 3일 뒤 다시 활성화 **/
                 Date blockedDate = Date.valueOf(LocalDate.now().plusDays(4));
                 int result = reportDao.updateUserBlock(postReportReq.getTargetUserId(), blockedDate);
@@ -79,10 +85,15 @@ public class ReportService {
             }
 
             postReportReq.setReportTypeId(getReportId(ReportType.Art, postReportReq.getReportType()));   // 신고 유형 ID 등록
-            reportCount = reportDao.insertArtReport(userId, postReportReq);    // 신고 등록
+            Map<String, Integer> report = reportDao.insertArtReport(userId, postReportReq);    // 신고 등록
+
+            // 신고한 적이 있는 경우
+            if (report.get("updateRow") == 0) {
+                throw  new BaseException(DUPLICATED_REPORT);
+            }
 
             // 신고 3회 누적 시, 작품 차단
-            if (reportCount % 3 == 0) {
+            if (report.get("count") % 3 == 0) {
                 int result = reportDao.updateArtBlock(postReportReq.getTargetArtId());
                 if (result == 0) {
                     throw new Exception();
