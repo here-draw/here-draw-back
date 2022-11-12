@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 
 @Validated
@@ -249,6 +250,48 @@ public class UserController {
             throw new BaseException(e.getStatus());
         } catch(Exception e) {
             logger.error("PostFollow Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로워 목록 조회 API
+     * [GET] /users/follower-list
+     * @return BaseResponse<List<ProfileInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/follower-list")
+    public BaseResponse<List<ProfileInfo>> getFollowerList() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            List<ProfileInfo> profileInfoList = userProvider.getFollowerList(userIdByJwt);
+
+            return new BaseResponse<>(profileInfoList);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetFollowerList Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로잉 목록 조회 API
+     * [GET] /users/following-list
+     * @return BaseResponse<List<ProfileInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/following-list")
+    public BaseResponse<List<ProfileInfo>> getFollowingList() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            List<ProfileInfo> profileInfoList = userProvider.getFollowingList(userIdByJwt);
+
+            return new BaseResponse<>(profileInfoList);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetFollowingList Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }
