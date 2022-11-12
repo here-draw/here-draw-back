@@ -95,7 +95,14 @@ public class UserProvider {
 
     public ArtistInfo getArtistInfo(long userId, long artistId) throws BaseException {
         try {
-            return userDao.getArtistInfo(userId, artistId);
+            int check = userDao.checkUserId(artistId);
+            if(check == 1) {
+                return userDao.getArtistInfo(userId, artistId);
+            } else {
+                throw new BaseException(BAD_REQUEST);
+            }
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
         } catch (Exception e){
             logger.error("GetArtistInfo Error(UserDao)", e);
             throw new BaseException(DATABASE_ERROR);
