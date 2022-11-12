@@ -12,7 +12,6 @@ public class ArtistInfo {
     private String nickname;
     private String description;
     private int followerCnt;
-    private int followingCnt;
     private int likeCnt;
     private boolean isFollowing;
 }

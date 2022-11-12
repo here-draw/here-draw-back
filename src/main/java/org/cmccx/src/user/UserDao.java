@@ -164,8 +164,7 @@ public class UserDao {
     // 작가 정보 조회
     public ArtistInfo getArtistInfo(long userId, long artistId) {
         String query = "SELECT p.profile_image as profileImage, p.nickname, p.description,\n" +
-                "       COUNT(CASE WHEN target_user_id= ? THEN 1 END) AS followerCnt,\n" +
-                "       COUNT(CASE WHEN follower_id= ? THEN 1 END) AS followingCnt,\n" +
+                "       COUNT(CASE WHEN target_user_id= ? and f.status='A' THEN 1 END) AS followerCnt,\n" +
                 "       (SELECT COUNT(*)\n" +
                 "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt,\n" +
                 "       (SELECT EXISTS(SELECT * from follow f_c where f_c.follower_id = ? and f_c.target_user_id = ?)) as isFollowing\n" +
@@ -177,12 +176,10 @@ public class UserDao {
                         rs.getString("nickname"),
                         rs.getString("description"),
                         rs.getInt("followerCnt"),
-                        rs.getInt("followingCnt"),
                         rs.getInt("likeCnt"),
                         rs.getInt("isFollowing") == 1 ? true : false),
-                artistId, artistId, artistId, userId, artistId, artistId);
+                artistId, artistId, userId, artistId, artistId);
     }
-
 
     // 프로필 정보 수정
     public void modifyProfileInfo(long userId, String nickname, String description) {
