@@ -151,15 +151,11 @@ public class UserService {
         String status;
         try {
             Claims appleInfo = appleService.getClaimsBy(identityToken);
-            System.out.println("this is apple Info !!!!!!!!!!!!!!!!!!!!");
-            System.out.println(appleInfo.toString());
             String socialId = appleInfo.get("sub").toString();
-            System.out.println("extracted socialId is : " + socialId);
 
             // 등록된 유저인지 확인
             UserInfo userInfo = userProvider.checkUser("A", socialId);
             if(userInfo == null){ // 미등록 유저
-                System.out.println("new user's email is : " + appleInfo.get("email").toString());
                 // 회원가입
                 userId = userDao.insertUser("A", socialId, appleInfo.get("email").toString(), null);
             } else {

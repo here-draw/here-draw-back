@@ -41,7 +41,6 @@ public class AppleService {
         // HTTP Request
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(reqURL, String.class);
-        System.out.println(result);
 
         //써야하는 Element (kid, alg 일치하는 element)
         JsonNode availableObject = null;
@@ -70,10 +69,6 @@ public class AppleService {
             Map<String, String> header = new ObjectMapper().readValue(new String(Base64.getDecoder().decode(headerOfIdentityToken), "UTF-8"), Map.class);
 
             AppleService.Key key = getMatchedKey(header);
-            System.out.println("returned key info");
-            System.out.println(key.getN());
-            System.out.println(key.getE());
-            System.out.println("++++++++++++++++++++++++++++++++++");
 
             byte[] nBytes = Base64.getUrlDecoder().decode(key.getN());
             byte[] eBytes = Base64.getUrlDecoder().decode(key.getE());
