@@ -52,6 +52,9 @@ public enum BaseResponseStatus {
     EXCLUSIVE_SALE_ART(false, 2505, "독점 판매된 작품은 삭제할 수 없습니다."),
     EXCEEDED_ART_QUANTITY(false, 2506, "판매 수량보다 적은 값은 입력할 수 없습니다."),
     DUPLICATED_GALLERY_NAME(false, 2507, "이미 등록된 갤러리명입니다."),
+    DUPLICATED_REPORT(false, 2508, "이미 신고되었습니다."),
+    FAIL_EXIT_CHATROOM(false, 2509, "거래가 완료되지 않은 채팅방입니다."),
+    INCLUDED_FORBIDDEN_WORD(false, 2510, "보낼 수 없는 단어입니다."),
 
 
     /**
