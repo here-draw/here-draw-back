@@ -228,6 +228,16 @@ public class UserService {
         }
     }
 
+    // 기본 갤러리 생성
+    public void createDefaultGallery(long userId) throws BaseException {
+        try {
+            userDao.createDefaultGallery(userId);
+        } catch (Exception e){
+            logger.error("CreateDefaultGallery Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 프로필 수정
     @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
     public void modifyProfileInfo(long userId, ProfileInfo profileInfo, MultipartFile newImage) throws BaseException {

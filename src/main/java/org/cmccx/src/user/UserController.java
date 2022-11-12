@@ -149,6 +149,7 @@ public class UserController {
         try {
             long userIdByJwt = jwtService.getUserId();
             userService.modifyNickname(userIdByJwt, map.get("nickname"));
+            userService.createDefaultGallery(userIdByJwt);
 
             String result = "닉네임 설정이 완료되었습니다.";
             return new BaseResponse<>(result);

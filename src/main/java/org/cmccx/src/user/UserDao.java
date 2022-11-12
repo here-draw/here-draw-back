@@ -128,6 +128,12 @@ public class UserDao {
         this.jdbcTemplate.update(query, nickname, userId);
     }
 
+    // 기본 갤러리 생성
+    public void createDefaultGallery(long userId) {
+        String query = "INSERT INTO gallery (user_id, name) VALUES(?, ?)";
+        this.jdbcTemplate.update(query, userId, "기본 갤러리");
+    }
+
     // 프로필 정보 조회
     public ProfileInfo getProfileInfo(long userId) {
         String query = "SELECT profile_image, nickname, description from profile where user_id = " + userId;
