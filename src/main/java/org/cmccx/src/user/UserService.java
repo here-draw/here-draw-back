@@ -96,41 +96,21 @@ public class UserService {
 
                 if(status.equals("I")) {
                     // 휴면 회원 -> 정보 다시 가져오고, 로그인 처리.
-                    try {
-                        userDao.recoveryUserInfo(userId);
-                    } catch (Exception e) {
-                        throw new BaseException(DATABASE_ERROR);
-                    }
+                    userDao.updateUserStatus(userId, "A");
                 } else if(status.equals("D")) {
                     // 탈퇴 회원 -> 가입 가능한 날짜인지 확인, 가입 처리.
-                    LocalDate nowDate = LocalDate.now();
-                    LocalDate enableSignUpDate = userDao.getEnableSignUpDate(userId);
-                    int checkDate = nowDate.compareTo(enableSignUpDate);
-                    if(checkDate < 0) {
-                        throw new BaseException(INVALID_SIGNUP_USER, enableSignUpDate.format(DateTimeFormatter.ofPattern("YYYY년 MM월 dd일")));
-                    } else {
-                        KakaoInfo kakaoInfo = getKakaoInfo(jsonNode);
-                        userId = userDao.insertUser("K", socialId, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
-                    }
+                    checkEnableDate(userId, status);
+                    // 이전 userId 삭제
+                    userDao.deletePrevUserId(userId);
+                    // 새로운 userId 등록하고, 새로 가입 처리.
+                    KakaoInfo kakaoInfo = getKakaoInfo(jsonNode);
+                    userId = userDao.insertUser("K", socialId, kakaoInfo.getEmail(), kakaoInfo.getProfileImage());
+                } else if(status.equals("P")) {
+                    // 영구 차단
+                    throw new BaseException(BLOCKED_SIGNUP);
                 } else if(status.equals("B")) {
-                    // 차단 회원 -> 영구 차단이면 로그인 및 회원가입 불가, 차단 기한이 끝나지 않았으면 로그인 불가.
-                    LocalDate permanentBlock = LocalDate.of(2999, 1, 1);
-                    LocalDate blockedDate = userDao.getBlockedDate(userId);
-                    if(blockedDate == null) {
-                        throw new BaseException(DATABASE_ERROR);
-                    }
-                    boolean isBlocked = blockedDate.isEqual(permanentBlock);
-
-                    if(isBlocked) {
-                        throw new BaseException(BLOCKED_SIGNUP);
-                    } else {
-                        LocalDate nowDate = LocalDate.now();
-                        int checkDate = nowDate.compareTo(blockedDate);
-                        if(checkDate <= 0) {
-                            // 차단기한 통보
-                            throw new BaseException(BLOCKED_LOGIN, blockedDate.format(DateTimeFormatter.ofPattern("YYYY년 MM월 dd일")));
-                        }
-                    }
+                    checkEnableDate(userId, status);
+                    userDao.updateUserStatus(userId, "A");
                 }
             }
             // 정상 로그인 처리
@@ -163,17 +143,20 @@ public class UserService {
                 nickname = userInfo.getNickname();
                 status = userInfo.getStatus();
                 if(status.equals("I")) {
-                    userDao.updateUserStatus(userId, 'A');
+                    userDao.updateUserStatus(userId, "A");
                 } else if(status.equals("D")) {
                     // 탈퇴 회원 -> 가입 가능한 날짜인지 확인, 가입 처리.
                     checkEnableDate(userId, status);
+                    // 이전 userId 삭제
+                    userDao.deletePrevUserId(userId);
+                    // 새로운 userId 등록하고, 새로 가입 처리.
                     userId = userDao.insertUser("A", socialId, appleInfo.get("email").toString(), null);
                 } else if(status.equals("P")) {
                     // 영구 차단
                     throw new BaseException(BLOCKED_SIGNUP);
                 } else if(status.equals("B")) {
                     checkEnableDate(userId, status);
-                    userDao.updateUserStatus(userId, 'A');
+                    userDao.updateUserStatus(userId, "A");
                 }
             }
             return approvalUser(userId, nickname);
