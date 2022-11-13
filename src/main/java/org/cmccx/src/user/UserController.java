@@ -164,14 +164,14 @@ public class UserController {
 
     /**
      * 닉네임 중복 체크 API
-     * [GET] /users/check-nickname
+     * [GET] /users/check?nickname={nickname}
      * @return BaseResponse<String>
      */
     @ResponseBody
-    @GetMapping("/check-nickname")
-    public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
+    @GetMapping("/check")
+    public BaseResponse<String> checkNickname(@RequestParam(required = true) String nickname) throws BaseException {
         try {
-            int isExist = userProvider.checkNickname(map.get("nickname"));
+            int isExist = userProvider.checkNickname(nickname);
 
             String result;
             if(isExist == 0) {
@@ -358,5 +358,21 @@ public class UserController {
             logger.error("GetArtistInfo Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
+    }
+
+    /**
+     * 작가별 작품 목록 조회 API
+     * [GET] /users/{artist-id}/arts?type={type}&art-id={art-id}&size={size}
+     * @return BaseResponse<GetArtsByUserRes>
+     */
+    @ResponseBody
+    @GetMapping("/{artist-id}/arts")
+    public BaseResponse<GetArtsByUserRes> getArtsByUser(@PathVariable(value = "artist-id") long artistId,
+                                                        @RequestParam(value = "type", defaultValue = "artist") String type,
+                                                        @RequestParam(value = "art-id", defaultValue = "0") long artId,
+                                                        @RequestParam(value = "size", defaultValue = "10000") int size) throws BaseException {
+        GetArtsByUserRes result = userProvider.getArtsByUser(artistId, type, artId, size);
+
+        return new BaseResponse<>(result);
     }
 }

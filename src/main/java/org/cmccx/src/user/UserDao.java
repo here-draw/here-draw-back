@@ -163,22 +163,24 @@ public class UserDao {
 
     // 작가 정보 조회
     public ArtistInfo getArtistInfo(long userId, long artistId) {
-        String query = "SELECT p.profile_image as profileImage, p.nickname, p.description,\n" +
+        String query = "SELECT p.profile_image as profileImg, p.nickname, p.description,\n" +
                 "       COUNT(CASE WHEN target_user_id= ? and f.status='A' THEN 1 END) AS followerCnt,\n" +
                 "       (SELECT COUNT(*)\n" +
                 "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt,\n" +
-                "       (SELECT EXISTS(SELECT * from follow f_c where f_c.follower_id = ? and f_c.target_user_id = ?)) as isFollowing\n" +
+                "       (SELECT EXISTS(SELECT * from follow f_c where f_c.follower_id = ? and f_c.target_user_id = ?)) as isFollowing,\n" +
+                "       (SELECT EXISTS(SELECT * from article_compilation where user_id = ? and status NOT IN ('I'))) as hasArticle\n" +
                 "FROM follow f\n" +
                 "INNER JOIN profile p on p.user_id = ?;";
         return this.jdbcTemplate.queryForObject(query,
                 (rs, rowNum) -> new ArtistInfo(
-                        rs.getString("profileImage"),
+                        rs.getString("profileImg"),
                         rs.getString("nickname"),
                         rs.getString("description"),
                         rs.getInt("followerCnt"),
                         rs.getInt("likeCnt"),
-                        rs.getInt("isFollowing") == 1 ? true : false),
-                artistId, artistId, userId, artistId, artistId);
+                        rs.getBoolean("isFollowing"),
+                        rs.getBoolean("hasArticle")),
+                artistId, artistId, userId, artistId, artistId, artistId);
     }
 
     // 프로필 정보 수정
@@ -247,5 +249,39 @@ public class UserDao {
                         rs.getString("nickname"),
                         null
                 ), userId);
+    }
+
+    /** 작가별 작품 조회 **/
+    public List<ArtInfo> selectArtsByUserId(long userId, long artistId, boolean isMyPage, long artId, int size){
+        StringBuilder query = new StringBuilder("SELECT art.art_id, art.user_id, art_image, title, price, IFNULL(user_like.art_id, 0)  AS count, art.status ");
+        query.append("FROM art ");
+        query.append("LEFT JOIN (SELECT art_id ");
+        query.append("FROM gallery ");
+        query.append("INNER JOIN bookmark b ON gallery.gallery_id = b.gallery_id ");
+        query.append("WHERE user_id = ? ");
+        query.append("GROUP BY art_id) user_like ON user_like.art_id = art.art_id ");
+        query.append("WHERE art.user_id = ? AND art.art_id <> ? ");
+
+        if (isMyPage){  // MYPage
+            query.append("AND (status IN ('S', 'F', 'E')) ");
+        } else {  // 작가 홈
+            query.append("AND (status = 'S') ");
+        }
+
+        query.append("ORDER BY updated_at DESC ");
+        query.append("LIMIT ?");
+
+        Object[] params = new Object[]{userId, artistId, artId, size};
+
+        return this.jdbcTemplate.query(query.toString(),
+                (rs, rowNum) -> new ArtInfo(
+                        rs.getLong("art.art_id"),
+                        rs.getLong("art.user_id"),
+                        rs.getString("art_image"),
+                        rs.getString("title"),
+                        rs.getInt("price"),
+                        rs.getInt("count"),
+                        rs.getString("status")),
+                params);
     }
 }
