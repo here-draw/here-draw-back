@@ -25,12 +25,6 @@ public class ArtDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    /** 회원 ID 확인 **/
-    public int checkUser(long userId){
-        String query ="SELECT EXISTS(SELECT 1 FROM user WHERE user_id = ? AND status NOT IN ('D', 'P'))";
-        return this.jdbcTemplate.queryForObject(query, int.class, userId);
-    }
-
     /** 작품 ID 확인 **/
     public int checkArt(long artId){
         String query = "SELECT EXISTS(SELECT 1 FROM art WHERE art_id = ? AND status NOT IN ('B', 'D', 'N'))";
@@ -91,41 +85,6 @@ public class ArtDao {
                         rs.getString("created_at")),
                 params);
     }
-
-    /** 작가별 작품 조회 **/
-    public List<ArtInfo> selectArsByUserId(long userId, long artistId, boolean isMyPage, long artId, int size){
-        StringBuilder query = new StringBuilder("SELECT art.art_id, art.user_id, art_image, title, price, IFNULL(user_like.art_id, 0)  AS count, art.status ");
-        query.append("FROM art ");
-        query.append("LEFT JOIN (SELECT art_id ");
-        query.append("FROM gallery ");
-        query.append("INNER JOIN bookmark b ON gallery.gallery_id = b.gallery_id ");
-        query.append("WHERE user_id = ? ");
-        query.append("GROUP BY art_id) user_like ON user_like.art_id = art.art_id ");
-        query.append("WHERE art.user_id = ? AND art.art_id <> ? ");
-
-        if (isMyPage){  // MYPage
-            query.append("AND (status IN ('S', 'F', 'E')) ");
-        } else {  // 작가 홈
-            query.append("AND (status = 'S') ");
-        }
-
-        query.append("ORDER BY updated_at DESC ");
-        query.append("LIMIT ?");
-
-        Object[] params = new Object[]{userId, artistId, artId, size};
-
-        return this.jdbcTemplate.query(query.toString(),
-                (rs, rowNum) -> new ArtInfo(
-                        rs.getLong("art.art_id"),
-                        rs.getLong("art.user_id"),
-                        rs.getString("art_image"),
-                        rs.getString("title"),
-                        rs.getInt("price"),
-                        rs.getInt("count"),
-                        rs.getString("status")),
-                params);
-    }
-
 
     /** 추천 작품 조회 **/
     public List<ArtInfo> selectRecommendedArts(long userId, long artId){
@@ -337,6 +296,21 @@ public class ArtDao {
                 artId};
 
         return this.jdbcTemplate.update(query, params);
+    }
+
+    /** 판매 수량 증가 **/
+    public boolean updateSalesQuantity(long artId) {
+        String query = "UPDATE art SET sales_quantity = sales_quantity + 1 WHERE art_id = ?";
+        this.jdbcTemplate.update(query, artId);
+
+        String statusQuery = "SELECT IF(sales_quantity >= count, TRUE, FALSE) FROM art WHERE art_id = ?";
+        return this.jdbcTemplate.queryForObject(statusQuery, Boolean.class, artId);
+    }
+
+    /** 작품 상태 수정 **/
+    public int updateArtStatus(long artId, String status) {
+        String query = "UPDATE art SET status = ? WHERE art_id = ?";
+        return this.jdbcTemplate.update(query, status, artId);
     }
 
     /** 작품 삭제 **/

@@ -21,4 +21,7 @@ public class PostTradeConfirmReq {
 
     @NotNull(message = "구매작품 ID를 입력하세요.")
     private Long artId;
+
+    @NotNull(message = "독점 구매 여부를 입력하세요.")
+    private Boolean exclusive;
 }
