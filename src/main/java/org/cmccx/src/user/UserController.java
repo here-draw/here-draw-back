@@ -216,7 +216,7 @@ public class UserController {
      */
     @ResponseBody
     @PatchMapping("/mypage/profile")
-    public BaseResponse<String> modifyProfileInfo(@RequestPart(value = "profileInfo") ProfileInfo profileInfo,
+    public BaseResponse<String> modifyProfileInfo(@Valid @RequestPart(value = "profileInfo") ProfileInfo profileInfo,
                                                   @RequestPart(value = "image", required = false) MultipartFile image) throws BaseException {
         try {
             long userIdByJwt = jwtService.getUserId();

@@ -16,7 +16,6 @@ import static org.cmccx.config.BaseResponseStatus.*;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -55,6 +54,16 @@ public class UserProvider {
             return userDao.checkNickname(nickname);
         } catch (Exception e){
             logger.error("CheckNickname Error(UserDao)", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 유저 아이디 체크
+    public int checkUserId(long userId) throws BaseException {
+        try {
+            return userDao.checkUserId(userId);
+        } catch (Exception e) {
+            logger.error("CheckUserId Error(UserDao)", e);
             throw new BaseException(DATABASE_ERROR);
         }
     }
