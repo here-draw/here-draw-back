@@ -250,4 +250,38 @@ public class UserDao {
                         null
                 ), userId);
     }
+
+    /** 작가별 작품 조회 **/
+    public List<ArtInfo> selectArtsByUserId(long userId, long artistId, boolean isMyPage, long artId, int size){
+        StringBuilder query = new StringBuilder("SELECT art.art_id, art.user_id, art_image, title, price, IFNULL(user_like.art_id, 0)  AS count, art.status ");
+        query.append("FROM art ");
+        query.append("LEFT JOIN (SELECT art_id ");
+        query.append("FROM gallery ");
+        query.append("INNER JOIN bookmark b ON gallery.gallery_id = b.gallery_id ");
+        query.append("WHERE user_id = ? ");
+        query.append("GROUP BY art_id) user_like ON user_like.art_id = art.art_id ");
+        query.append("WHERE art.user_id = ? AND art.art_id <> ? ");
+
+        if (isMyPage){  // MYPage
+            query.append("AND (status IN ('S', 'F', 'E')) ");
+        } else {  // 작가 홈
+            query.append("AND (status = 'S') ");
+        }
+
+        query.append("ORDER BY updated_at DESC ");
+        query.append("LIMIT ?");
+
+        Object[] params = new Object[]{userId, artistId, artId, size};
+
+        return this.jdbcTemplate.query(query.toString(),
+                (rs, rowNum) -> new ArtInfo(
+                        rs.getLong("art.art_id"),
+                        rs.getLong("art.user_id"),
+                        rs.getString("art_image"),
+                        rs.getString("title"),
+                        rs.getInt("price"),
+                        rs.getInt("count"),
+                        rs.getString("status")),
+                params);
+    }
 }
