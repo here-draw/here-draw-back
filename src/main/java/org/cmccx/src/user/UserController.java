@@ -164,14 +164,14 @@ public class UserController {
 
     /**
      * 닉네임 중복 체크 API
-     * [GET] /users/check-nickname
+     * [GET] /users/check?nickname={nickname}
      * @return BaseResponse<String>
      */
     @ResponseBody
-    @GetMapping("/check-nickname")
-    public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
+    @GetMapping("/check")
+    public BaseResponse<String> checkNickname(@RequestParam(required = true) String nickname) throws BaseException {
         try {
-            int isExist = userProvider.checkNickname(map.get("nickname"));
+            int isExist = userProvider.checkNickname(nickname);
 
             String result;
             if(isExist == 0) {
