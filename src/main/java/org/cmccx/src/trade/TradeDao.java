@@ -21,9 +21,7 @@ public class TradeDao {
     /** 거래 상태 조회 **/
     public String selectTradeStatus(long roomId) {
         try {
-            String query = "SELECT status " +
-                    "FROM purchase_history " +
-                    "WHERE room_id = ?";
+            String query = "SELECT status FROM purchase_history WHERE room_id = ?";
             return this.jdbcTemplate.queryForObject(query, String.class, roomId);
         } catch (Exception e) {
             return null;
@@ -47,7 +45,7 @@ public class TradeDao {
     }
 
     /** 거래 확정 **/
-    public int insertTradeConfirm(PostTradeConfirmReq postTradeConfirmReq, long userId) {
+    public String insertTradeConfirm(PostTradeConfirmReq postTradeConfirmReq, long userId) {
         String query = "INSERT INTO purchase_history(seller_id, buyer_id, room_id, art_id, status) " +
                         "VALUES (?, ?, ?, ?, IF(seller_id = ?, 'S', 'B')) " +
                         "ON DUPLICATE KEY UPDATE status = " +
@@ -60,7 +58,9 @@ public class TradeDao {
 
         Object[] params = new Object[] {postTradeConfirmReq.getSellerId(), postTradeConfirmReq.getBuyerId(), postTradeConfirmReq.getRoomId(), postTradeConfirmReq.getArtId(),
                                         userId,userId, userId, userId, userId};
-        return this.jdbcTemplate.update(query, params);
-    }
+        this.jdbcTemplate.update(query, params);
 
+        String statusQuery = "SELECT status FROM purchase_history WHERE room_id = ?";
+        return this.jdbcTemplate.queryForObject(statusQuery, String.class, postTradeConfirmReq.getRoomId());
+    }
 }
