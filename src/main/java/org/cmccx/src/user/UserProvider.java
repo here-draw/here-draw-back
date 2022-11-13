@@ -146,4 +146,41 @@ public class UserProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    /** 작가별 작품 조회 **/
+    public GetArtsByUserRes getArtsByUser(long artistId, String type, long artId, int size) throws BaseException {
+        try {
+            List<ArtInfo> artList;
+            GetArtsByUserRes result;
+
+            // 회원 검증 및 ID 추출
+            long userId = jwtService.getUserId();
+
+            // 작가ID 확인
+            int isUser = userDao.checkUserId(artistId);
+            if (isUser == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
+            if (type.equals("my")) {
+                if (userId == artistId) { // MyPage
+                    artList = userDao.selectArtsByUserId(userId, artistId, true, artId, size);
+                    result = new GetArtsByUserRes(artList.size(), artList);
+
+                } else {
+                    throw new BaseException(INVALID_USER_JWT);
+                }
+            } else {    // 그 외 화면
+                artList = userDao.selectArtsByUserId(userId, artistId, false, artId, size);
+                result = new GetArtsByUserRes(artList.size(), artList);
+            }
+
+            return result;
+        } catch (BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch (Exception e) {
+            logger.error("GetArtsByUser Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }
