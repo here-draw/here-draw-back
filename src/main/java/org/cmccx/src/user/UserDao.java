@@ -9,8 +9,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
 
-import java.util.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public class UserDao {
@@ -23,7 +23,7 @@ public class UserDao {
     }
 
     /** 회원가입 **/
-    public long insertUser(String socialType, long socialId, String email, String profileImage) {
+    public long insertUser(String socialType, String socialId, String email, String profileImage) {
         String query = "INSERT INTO user (social_type, social_id, email) VALUES(?, ?, ?)";
         Object[] params = new Object[]{socialType, socialId, email};
         this.jdbcTemplate.update(query, params);
@@ -38,15 +38,21 @@ public class UserDao {
     }
 
     /** 유저 상태 수정 **/
-    public void updateUserStatus(long userId, char status){
+    public void updateUserStatus(long userId, String status){
         String query = "UPDATE user SET status = ? WHERE user_id = ?";
 
         this.jdbcTemplate.update(query, status, userId);
     }
 
+    /** 유저 상태 조회 **/
+    public String getUserStatus(long userId){
+        String query = "SELECT status from user WHERE user_id = ?";
+
+        return this.jdbcTemplate.queryForObject(query, String.class, userId);
+    }
 
     // 회원 가입 여부 확인 및 닉네임/상태 확인
-    public UserInfo checkUser(String socialType, long socialId) {
+    public UserInfo checkUser(String socialType, String socialId) {
         String query = "SELECT u.user_id, p.nickname, u.status " +
                 "FROM user u " +
                 "LEFT JOIN profile p ON u.user_id = p.user_id " +
@@ -63,6 +69,12 @@ public class UserDao {
         } catch (EmptyResultDataAccessException e){
             return null;
         }
+    }
+
+    // 탈퇴 회원의 이전 userId 삭제
+    public void deletePrevUserId(long userId) {
+        String query = "UPDATE user SET social_type = '-', social_id = '-' WHERE user_id = ?";
+        this.jdbcTemplate.update(query, userId);
     }
 
     /** 휴면 회원 정보 가져오기 **/
@@ -98,6 +110,12 @@ public class UserDao {
         this.jdbcTemplate.update(query);
     }
 
+    // userId 체크
+    public int checkUserId(long userId) {
+        String query = "SELECT EXISTS(SELECT user_id from profile where user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId);
+    }
+
     // 닉네임 중복 체크
     public int checkNickname(String nickname) {
         String query = "SELECT EXISTS(SELECT nickname from profile where nickname = ?)";
@@ -110,6 +128,12 @@ public class UserDao {
         this.jdbcTemplate.update(query, nickname, userId);
     }
 
+    // 기본 갤러리 생성
+    public void createDefaultGallery(long userId) {
+        String query = "INSERT INTO gallery (user_id, name) VALUES(?, ?)";
+        this.jdbcTemplate.update(query, userId, "기본 갤러리");
+    }
+
     // 프로필 정보 조회
     public ProfileInfo getProfileInfo(long userId) {
         String query = "SELECT profile_image, nickname, description from profile where user_id = " + userId;
@@ -119,6 +143,42 @@ public class UserDao {
                         rs.getString("nickname"),
                         rs.getString("description"))
                 );
+    }
+
+    // 마이페이지 - 유저 정보(팔로우 수, 팔로잉 수, 작품찜 수) 조회
+    public LikeInfo getLikeInfo(long userId) {
+        String query = "SELECT COUNT(CASE WHEN target_user_id= ? THEN 1 END) AS followerCnt,\n" +
+                "       COUNT(CASE WHEN follower_id = ? THEN 1 END) AS followingCnt,\n" +
+                "       (SELECT COUNT(*)\n" +
+                "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt\n" +
+                "FROM follow\n" +
+                "WHERE status='A'";
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new LikeInfo(
+                        rs.getInt("followerCnt"),
+                        rs.getInt("followingCnt"),
+                        rs.getInt("likeCnt")),
+                userId, userId, userId);
+    }
+
+    // 작가 정보 조회
+    public ArtistInfo getArtistInfo(long userId, long artistId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname, p.description,\n" +
+                "       COUNT(CASE WHEN target_user_id= ? and f.status='A' THEN 1 END) AS followerCnt,\n" +
+                "       (SELECT COUNT(*)\n" +
+                "        FROM art a INNER JOIN bookmark b on b.art_id = a.art_id and a.user_id = ?) AS likeCnt,\n" +
+                "       (SELECT EXISTS(SELECT * from follow f_c where f_c.follower_id = ? and f_c.target_user_id = ?)) as isFollowing\n" +
+                "FROM follow f\n" +
+                "INNER JOIN profile p on p.user_id = ?;";
+        return this.jdbcTemplate.queryForObject(query,
+                (rs, rowNum) -> new ArtistInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        rs.getString("description"),
+                        rs.getInt("followerCnt"),
+                        rs.getInt("likeCnt"),
+                        rs.getInt("isFollowing") == 1 ? true : false),
+                artistId, artistId, userId, artistId, artistId);
     }
 
     // 프로필 정보 수정
@@ -137,5 +197,55 @@ public class UserDao {
     public String getProfileImg(long userId) {
         String query = "SELECT profile_image from profile where user_id = " + userId;
         return this.jdbcTemplate.queryForObject(query, String.class);
+    }
+
+    // FollowList 체크
+    public int checkFollowList(long userId, long targetId) {
+        String query = "SELECT EXISTS(SELECT follower_id from follow where follower_id = ? and target_user_id = ?)";
+        return this.jdbcTemplate.queryForObject(query, int.class, userId, targetId);
+    }
+
+    // FollowList 수정
+    public int patchFollowList(long userId, long targetId, String status) {
+        String checkStatusQuery = "select status from follow where follower_id = ? and target_user_id = ?";
+        String statusCheck = this.jdbcTemplate.queryForObject(checkStatusQuery, (rs, rowNum) -> rs.getString("status"), userId, targetId);
+        if(statusCheck.equals(status)) {
+            return 0;
+        } else {
+            String patchFollowQuery = "update follow set status = ? where follower_id = ? and target_user_id = ?";
+            this.jdbcTemplate.update(patchFollowQuery, status, userId, targetId);
+            return 1;
+        }
+    }
+
+    public void postFollowList(long userId, long targetId) {
+        String createQuery = "insert into follow (follower_id, target_user_id) VALUES (?,?)";
+        this.jdbcTemplate.update(createQuery, userId, targetId);
+    }
+
+    public List<ProfileInfo> getFollowerList(long userId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname\n" +
+                "from follow f\n" +
+                "         INNER JOIN profile p on p.user_id = f.follower_id\n" +
+                "where f.target_user_id = ? and f.status = 'A'";
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        null
+                ), userId);
+    }
+
+    public List<ProfileInfo> getFollowingList(long userId) {
+        String query = "SELECT p.profile_image as profileImage, p.nickname\n" +
+                "from follow f\n" +
+                "         INNER JOIN profile p on p.user_id = f.target_user_id\n" +
+                "where f.follower_id = ? and f.status = 'A'";
+        return this.jdbcTemplate.query(query,
+                (rs, rowNum) -> new ProfileInfo(
+                        rs.getString("profileImage"),
+                        rs.getString("nickname"),
+                        null
+                ), userId);
     }
 }

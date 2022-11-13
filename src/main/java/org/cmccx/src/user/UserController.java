@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 
 @Validated
@@ -75,6 +76,28 @@ public class UserController {
     }
 
     /**
+     * 자동 로그인 API
+     * [POST] /users/login
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PatchMapping("/login")
+    public BaseResponse<String> login() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.login(userIdByJwt);
+
+            String result = "로그인에 성공하였습니다.";
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch(Exception e) {
+            logger.error("Auto Login Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
      * 카카오로 로그인 API
      * [POST] /users/kakao
      * @return BaseResponse<PostLoginRes>
@@ -96,6 +119,27 @@ public class UserController {
     }
 
     /**
+     * 애플 로그인 API
+     * [POST] /users/apple
+     * @return BaseResponse<PostLoginRes>
+     */
+    @ResponseBody
+    @PostMapping("/apple")
+    public BaseResponse<PostLoginRes> loginByApple(@RequestBody @Valid PostLoginReq appleToken) throws BaseException {
+        try {
+            String identityToken = appleToken.getAccessToken();
+            PostLoginRes loginRes = userService.loginByApple(identityToken);
+
+            return new BaseResponse<>(loginRes);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus(), e.getMessage());
+        } catch(Exception e) {
+            logger.error("LoginByApple Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
      * 초기 닉네임 설정 API
      * [PATCH] /users/nickname
      * @return BaseResponse<String>
@@ -106,6 +150,7 @@ public class UserController {
         try {
             long userIdByJwt = jwtService.getUserId();
             userService.modifyNickname(userIdByJwt, map.get("nickname"));
+            userService.createDefaultGallery(userIdByJwt);
 
             String result = "닉네임 설정이 완료되었습니다.";
             return new BaseResponse<>(result);
@@ -119,11 +164,11 @@ public class UserController {
 
     /**
      * 닉네임 중복 체크 API
-     * [GET] /users/mypage/nickname
+     * [GET] /users/check-nickname
      * @return BaseResponse<String>
      */
     @ResponseBody
-    @GetMapping("/mypage/nickname")
+    @GetMapping("/check-nickname")
     public BaseResponse<String> checkNickname(@RequestBody Map<String,String> map) throws BaseException {
         try {
             int isExist = userProvider.checkNickname(map.get("nickname"));
@@ -183,6 +228,134 @@ public class UserController {
             throw new BaseException(e.getStatus());
         } catch(Exception e) {
             logger.error("ModifyProfileInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로우 API
+     * [POST] /users/:user-id/follow
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PostMapping("/{user-id}/follow")
+    public BaseResponse<String> postFollow(@PathVariable("user-id") long targetId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.postFollow(userIdByJwt, targetId);
+            String result = "팔로우 요청에 성공하였습니다.";
+
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("PostFollow Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로워 목록 조회 API
+     * [GET] /users/follower-list
+     * @return BaseResponse<List<ProfileInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/follower-list")
+    public BaseResponse<List<ProfileInfo>> getFollowerList() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            List<ProfileInfo> profileInfoList = userProvider.getFollowerList(userIdByJwt);
+
+            return new BaseResponse<>(profileInfoList);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetFollowerList Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로잉 목록 조회 API
+     * [GET] /users/following-list
+     * @return BaseResponse<List<ProfileInfo>>
+     */
+    @ResponseBody
+    @GetMapping("/following-list")
+    public BaseResponse<List<ProfileInfo>> getFollowingList() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            List<ProfileInfo> profileInfoList = userProvider.getFollowingList(userIdByJwt);
+
+            return new BaseResponse<>(profileInfoList);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetFollowingList Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 팔로우 취소 API
+     * [DELETE] /users/:user-id/unfollow
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @DeleteMapping("/{user-id}/unfollow")
+    public BaseResponse<String> deleteFollow(@PathVariable("user-id") long targetId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.deleteFollow(userIdByJwt, targetId);
+            String result = "팔로우 취소 요청에 성공하였습니다.";
+
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("DeleteFollow Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 마이페이지 상단 조회 API
+     * [GET] /users/mypage
+     * @return BaseResponse<LikeInfo>
+     */
+    @ResponseBody
+    @GetMapping("/mypage")
+    public BaseResponse<LikeInfo> getLikeInfo() throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            LikeInfo likeInfo = userProvider.getLikeInfo(userIdByJwt);
+
+            return new BaseResponse<>(likeInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetLikeInfo Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
+
+    /**
+     * 작가 정보 조회 API
+     * [GET] /users/:artist-id/artist-info
+     * @return BaseResponse<ArtistInfo>
+     */
+    @ResponseBody
+    @GetMapping("/{artist-id}/artist-info")
+    public BaseResponse<ArtistInfo> getArtistInfo(@PathVariable("artist-id") long artistId) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            ArtistInfo artistInfo = userProvider.getArtistInfo(userIdByJwt, artistId);
+
+            return new BaseResponse<>(artistInfo);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("GetArtistInfo Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }
