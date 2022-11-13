@@ -4,7 +4,8 @@ import org.cmccx.config.BaseException;
 import org.cmccx.src.chat.ChatProvider;
 import org.cmccx.src.chat.ChatService;
 import org.cmccx.src.chat.model.ChatMessageReq;
-import org.cmccx.utils.JwtService;
+import org.cmccx.src.chat.model.SocketChatRoom;
+import org.cmccx.utils.WordFiltering;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
+import static org.cmccx.config.BaseResponseStatus.INCLUDED_FORBIDDEN_WORD;
 
 @Service
 public class SocketService {
@@ -24,17 +26,37 @@ public class SocketService {
     private final SimpMessagingTemplate messagingTemplate;
     private final SimpMessageSendingOperations messageSendingOperations;
 
-    private final JwtService jwtService;
+    private final WordFiltering wordFiltering;
     private final ChatProvider chatProvider;
     private final ChatService chatService;
 
     @Autowired
-    public SocketService(SimpMessagingTemplate messagingTemplate, SimpMessageSendingOperations messageSendingOperations, JwtService jwtService, ChatProvider chatProvider, ChatService chatService) {
+    public SocketService(SimpMessagingTemplate messagingTemplate, SimpMessageSendingOperations messageSendingOperations, WordFiltering wordFiltering, ChatProvider chatProvider, ChatService chatService) {
         this.messagingTemplate = messagingTemplate;
         this.messageSendingOperations = messageSendingOperations;
-        this.jwtService = jwtService;
+        this.wordFiltering = wordFiltering;
         this.chatProvider = chatProvider;
         this.chatService = chatService;
+    }
+
+    /** 소켓 연결 시 회원 추가 **/
+    public List<Long> connectWebsocket(long userId) {
+        websocketConnectedUsers.add(userId);
+        websocketConnectedUsers = websocketConnectedUsers.parallelStream()
+                                                            .distinct()
+                                                            .collect(Collectors.toList());
+        System.out.println(websocketConnectedUsers);
+        return websocketConnectedUsers;
+    }
+
+    /** 소켓 연결 해제 시 회원 제거 **/
+    public List<Long> disconnectWebsocket(long userId) {
+        websocketConnectedUsers.remove(userId);
+        websocketConnectedUsers = websocketConnectedUsers.parallelStream()
+                .distinct()
+                .collect(Collectors.toList());
+        System.out.println(websocketConnectedUsers);
+        return websocketConnectedUsers;
     }
 
     /** 채팅방 접속 회원 추가 **/
@@ -79,42 +101,55 @@ public class SocketService {
     }
 
     /** 채팅방 입장 **/
-    public void enterChatroom(long roomId, long userId) {
+    public void enterChatroom(SocketChatRoom socketChatRoom) {
         // 채팅방에 접속으로 처리
-        List<Long> users = addUser(roomId, userId);
+        List<Long> users = addUser(socketChatRoom.getRoomId(), socketChatRoom.getUserId());
         // 채팅방 구독
-        messagingTemplate.convertAndSend("/sub/chat/room" + roomId, users);
+        messagingTemplate.convertAndSend("/sub/chat/room" + socketChatRoom.getRoomId(), users);
     }
 
     /** 채팅방 퇴장 **/
-    public void exitChatroom(long roomId, long userId) {
+    public void exitChatroom(SocketChatRoom socketChatRoom) {
         // 채팅방에서 접속 해제
-        List<Long> users = removeUser(roomId, userId);
+        List<Long> users = removeUser(socketChatRoom.getRoomId(), socketChatRoom.getUserId());
         // 채팅방 구독 해제
-        messagingTemplate.convertAndSend("/sub/chat/room" + roomId, users);
+        messagingTemplate.convertAndSend("/sub/chat/room" + socketChatRoom.getRoomId(), users);
     }
 
     /** 메세지 발송**/
     @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
-    public void sendMessage(ChatMessageReq messageInfo) throws BaseException {
+    public void sendMessage(ChatMessageReq messageInfo) {
         long roomId = messageInfo.getRoomId();
+        long senderId = messageInfo.getSenderId();
+        long receiverId = messageInfo.getReceiverId();
 
         try {
-            //회원 검증 및 ID 추출
-            long userId = jwtService.getUserId();
-
-            // 금지어 제한한
-
+            // 금지어 제한
+            boolean isForbidden = wordFiltering.blankCheck(messageInfo.getMessage());
+            if (isForbidden) {
+                System.out.println("BAD WORD");
+                throw new BaseException(INCLUDED_FORBIDDEN_WORD);
+            }
 
             // 채팅방 소유 여부 확인
-            int isValid = chatProvider.checkUserChatRoom(roomId, userId);
+            int isValid = chatProvider.checkUserChatRoom(roomId, senderId);
             if (isValid == 0) {
                 throw new BaseException(BAD_REQUEST);
             }
 
-            // 메세지 전송
+            // 메세지 DB 저장
             chatService.registerMessage(messageInfo);
 
+            // 메세지 전송
+            messagingTemplate.convertAndSend("sub/chat/message" + roomId, messageInfo);
+
+            // 상대방이 나간 경우, 채팅방 활성화
+            int isContactUserValid = chatProvider.checkUserChatRoom(roomId, receiverId);
+            if (isContactUserValid == 0) {
+                chatService.modifyUserChatroomStatus(receiverId, roomId);
+            }
+
+            // 온라인이 아닐 경우 푸시
 
         } catch (BaseException e) {
 

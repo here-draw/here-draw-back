@@ -21,7 +21,7 @@ public class ChatDao {
     /** 이미 생성된 채팅방인지 확인 **/
     public GetExistentChatRoomData checkChatRoomByArt(RoomType type, long artId, long userId, long contactUserId) {
         Object[] params;
-        StringBuilder query = new StringBuilder("SELECT COUNT(*) AS is_exist, c.room_id, user.status, contact_user.status ");
+        StringBuilder query = new StringBuilder("SELECT COUNT(*) AS is_exist, IF(c.total_price IS NULL, FALSE, TRUE) AS is_purchase, c.room_id, user.status, contact_user.status ");
         query.append("FROM user_chatroom user ");
         query.append("INNER JOIN user_chatroom contact_user ON user.room_id = contact_user.room_id ");
         query.append("INNER JOIN chatroom c ON user.room_id = c.room_id ");
@@ -34,6 +34,7 @@ public class ChatDao {
             return this.jdbcTemplate.queryForObject(query.toString(),
                     (rs, rowNum) -> new GetExistentChatRoomData(
                             rs.getBoolean("is_exist"),
+                            rs.getBoolean("is_purchase"),
                             rs.getLong("c.room_id"),
                             rs.getString("user.status"),
                             rs.getString("contact_user.status")),
@@ -46,6 +47,7 @@ public class ChatDao {
             return this.jdbcTemplate.queryForObject(query.toString(),
                     (rs, rowNum) -> new GetExistentChatRoomData(
                             rs.getBoolean("is_exist"),
+                            rs.getBoolean("is_purchase"),
                             rs.getLong("c.room_id"),
                             rs.getString("user.status"),
                             rs.getString("contact_user.status")),
@@ -83,7 +85,7 @@ public class ChatDao {
 
     /** 채팅방 정보 조회 **/
     public GetChatRoomInfoRes selectChatRoomInfo(long userId, long roomId) {
-        String query = "SELECT ch.room_id, ch.art_id, a.user_id, title, total_price, `option`, " +
+        String query = "SELECT ch.room_id, ch.art_id, a.user_id, art_image, title, total_price, `option`, " +
                 "       CASE " +
                 "            WHEN a.art_id IS NULL AND title IS NULL THEN 'DM' " +
                 "            WHEN total_price IS NULL THEN 'inquiry' " +
@@ -120,6 +122,7 @@ public class ChatDao {
                         rs.getLong("ch.room_id"),
                         rs.getLong("ch.art_id"),
                         rs.getLong("a.user_id"),
+                        rs.getString("art_image"),
                         rs.getString("title"),
                         rs.getInt("total_price"),
                         rs.getString("option"),
@@ -129,16 +132,16 @@ public class ChatDao {
 
     /** 채팅방 메세지 기록 조회 **/
     public List<ChatRoomMessage> selectChatRoomMessages(long userId, long roomId, long messageId, String date)  {
-        String query ="SELECT message_id, IF(user_id = ?, TRUE, FALSE) AS sender, message, created_at " +
+        String query ="SELECT message_id, IF(m.user_id = ?, TRUE, FALSE) AS sender, message, m.created_at " +
                         "FROM message m " +
                         "INNER JOIN user_chatroom uc ON m.room_id = uc.room_id " +
                         "WHERE (m.room_id = ? AND uc.user_id = ? AND m.created_at > uc.updated_at) " +
-                        "AND ((created_at = ? AND message_id > ?) " +
-                        "OR created_at > ?) " +
-                        "ORDER BY created_at, message_id " +
+                        "AND ((m.created_at = ? AND message_id > ?) " +
+                        "OR m.created_at > ?) " +
+                        "ORDER BY m.created_at, message_id " +
                         "LIMIT 21";
 
-        Object[] params = new Object[] {userId, roomId, date, messageId, date};
+        Object[] params = new Object[] {userId, roomId, userId, date, messageId, date};
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> new ChatRoomMessage(
                 rs.getLong("message_id"),

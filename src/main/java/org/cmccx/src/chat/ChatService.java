@@ -7,6 +7,7 @@ import org.cmccx.src.chat.model.ChatMessageReq;
 import org.cmccx.src.chat.model.GetChatRoomInfoRes;
 import org.cmccx.src.chat.model.GetExistentChatRoomData;
 import org.cmccx.src.chat.model.PostChatRoomForArtReq;
+import org.cmccx.src.trade.TradeProvider;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,14 +26,16 @@ public class ChatService {
     private final ChatProvider chatProvider;
     private final ChatDao chatDao;
     private final ArtProvider artProvider;
+    private final TradeProvider tradeProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public ChatService(SimpMessagingTemplate messagingTemplate, ChatProvider chatProvider, ChatDao chatDao, ArtProvider artProvider, JwtService jwtService) {
+    public ChatService(SimpMessagingTemplate messagingTemplate, ChatProvider chatProvider, ChatDao chatDao, ArtProvider artProvider, TradeProvider tradeProvider, JwtService jwtService) {
         this.messagingTemplate = messagingTemplate;
         this.chatProvider = chatProvider;
         this.chatDao = chatDao;
         this.artProvider = artProvider;
+        this.tradeProvider = tradeProvider;
         this.jwtService = jwtService;
     }
 
@@ -53,7 +56,8 @@ public class ChatService {
              //회원 검증 및 ID 추출
              long userId = jwtService.getUserId();
 
-//            // 채팅 상대 ID 유효성 검사
+            // 채팅 상대 ID 유효성 검사
+//            int isValidUser = userDao.checkUserId(postChatRoomForArtReq.getArtistId());
 //            if (isValidUser == 0) {
 //                throw new BaseException(FAILED_ACCESS_USER);    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
 //            }
@@ -69,8 +73,11 @@ public class ChatService {
             // 채팅방이 있는 경우
             if (chatRoom.isExistent()) {
                 long roomId = chatRoom.getRoomId();
-                // 채팅방 정보 업데이트
-                chatDao.updateChatRoom(roomId, postChatRoomForArtReq);
+                // 채팅방 정보 업데이트(문의에서 구매로 넘어가는 경우)
+                if (!chatRoom.isPurchase()) {
+                    chatDao.updateChatRoom(roomId, postChatRoomForArtReq);
+                }
+
                 // 채팅방을 나간 회원 재연결
                 if (chatRoom.getUserStatus().equals("I")) {
                     chatDao.updateUserChatRoom(userId, roomId);
@@ -137,7 +144,18 @@ public class ChatService {
         }
     }
 
+    /** 유저 메세지 방 연결 **/
+    public void modifyUserChatroomStatus(long userId, long roomId) throws BaseException {
+        try {
+            chatDao.updateUserChatRoom(userId, roomId);
+        } catch (Exception e) {
+            logger.error("ModifyUserChatroomStatus Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     /** 채팅방 나가기 **/
+    @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
     public String exitChatRoom(long roomId) throws BaseException {
         try {
             //회원 검증 및 ID 추출
@@ -147,6 +165,14 @@ public class ChatService {
             int isValid = chatProvider.checkUserChatRoom(roomId, userId);
             if (isValid == 0) {
                 throw new BaseException(BAD_REQUEST);
+            }
+
+            // 거래 내역이 있는지 확인
+            String isExit = tradeProvider.getTradeStatus(roomId);
+            if (isExit != null) {
+                if (!isExit.equals('A')) {
+                    throw new BaseException(FAIL_EXIT_CHATROOM);
+                }
             }
 
             // 채팅방과 회원 매핑 관계 해제

@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class GetExistentChatRoomData {
     private boolean isExistent;
+    private boolean isPurchase;
     private long roomId;
     private String userStatus;
     private String contactUserStatus;
