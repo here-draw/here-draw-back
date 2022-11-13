@@ -1,5 +1,6 @@
 package org.cmccx.src.user;
 
+import org.cmccx.src.art.model.ArtInfo;
 import org.cmccx.src.user.model.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
