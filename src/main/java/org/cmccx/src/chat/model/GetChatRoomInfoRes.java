@@ -11,6 +11,7 @@ public class GetChatRoomInfoRes {
     private long roomId;
     private long artId;
     private long artistId;
+    private String artImage;
     private String title;
     private int totalPrice;
     private String option;

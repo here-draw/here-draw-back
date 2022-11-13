@@ -115,7 +115,4 @@ public class ChatProvider {
             throw new BaseException(RESPONSE_ERROR);
         }
     }
-
-
-
 }
