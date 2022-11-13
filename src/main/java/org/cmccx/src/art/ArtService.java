@@ -212,6 +212,26 @@ public class ArtService {
         }
     }
 
+    /** 판매 수량 증가 **/
+    public boolean modifySalesQuantity(long artId) throws BaseException {
+        try {
+            return artDao.updateSalesQuantity(artId);
+        } catch (Exception e) {
+            logger.error("ModifySalesQuantity Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    /** 작품 상태 수정 **/
+    public int updateArtStatus(long artId, String status) throws BaseException {
+        try {
+            return artDao.updateArtStatus(artId, status);
+        } catch (Exception e) {
+            logger.error("UpdateArtStatus Error", e);
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     /** 작품 삭제 **/
     @Transactional(rollbackFor = {Exception.class, RuntimeException.class})
     public String removeArt(long artId) throws BaseException {

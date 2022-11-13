@@ -3,7 +3,6 @@ package org.cmccx.src.art;
 import org.cmccx.config.BaseException;
 import org.cmccx.src.art.model.ArtInfo;
 import org.cmccx.src.art.model.GetArtByArtIdRes;
-import org.cmccx.src.art.model.GetArtsByUserRes;
 import org.cmccx.src.art.model.GetArtsRes;
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.ScrollPagination;
@@ -123,44 +122,6 @@ public class ArtProvider {
             throw new BaseException(e.getStatus());
         } catch (Exception e) {
             logger.error("GetRecommendedArts Error", e);
-            throw new BaseException(RESPONSE_ERROR);
-        }
-    }
-
-    /** 작가별 작품 조회 **/
-    public GetArtsByUserRes getArtsByUser(long artistId, String type, long artId, int size) throws BaseException {
-        try {
-            List<ArtInfo> artList;
-            GetArtsByUserRes result;
-
-            // 회원 검증 및 ID 추출
-            long userId = jwtService.getUserId();
-
-            // 작가ID 확인
-            int isUser = artDao.checkUser(artistId); /**user도메인으로 변경**/
-            if (isUser == 0) {
-                throw new BaseException(BAD_REQUEST);
-            }
-
-            if (type.equals("my")) {
-                if (userId == artistId) { // MyPage
-                    artList = artDao.selectArsByUserId(userId, artistId, true, artId, size);
-                    result = new GetArtsByUserRes(artList.size(), artList);
-
-                } else {
-                    throw new BaseException(INVALID_USER_JWT);
-                }
-            } else {    // 그 외 화면
-                artList = artDao.selectArsByUserId(userId, artistId, false, artId, size);
-                result = new GetArtsByUserRes(artList.size(), artList);
-            }
-
-            return result;
-
-        } catch (BaseException e) {
-            throw new BaseException(e.getStatus());
-        } catch (Exception e) {
-            logger.error("GetArtsByUserId Error", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }

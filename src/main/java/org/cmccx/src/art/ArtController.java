@@ -70,22 +70,6 @@ public class ArtController {
     }
 
     /**
-     * 작가별 작품 목록 조회 API
-     * [GET] /users/{user-id}/arts?type={type}&art-id={art-id}&size={size}
-     * @return BaseResponse<GetArtsByUserRes>
-     */
-    @ResponseBody
-    @GetMapping("/{artist-id}/arts")
-    public BaseResponse<GetArtsByUserRes> getArtsByUser(@PathVariable(value = "artist-id") long artistId,
-                                                         @RequestParam(value = "type", defaultValue = "artist") String type,
-                                                         @RequestParam(value = "art-id", defaultValue = "0") long artId,
-                                                         @RequestParam(value = "size", defaultValue = "10000") int size) throws BaseException {
-        GetArtsByUserRes result = artProvider.getArtsByUser(artistId, type, artId, size);
-
-        return new BaseResponse<>(result);
-    }
-
-    /**
      * 작품 상세정보 조회 API
      * [GET] /arts/{art-id}
      * @return BaseResponse<GetArtByArtIdRes>
