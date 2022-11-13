@@ -111,9 +111,9 @@ public class UserDao {
         this.jdbcTemplate.update(query);
     }
 
-    // userId 체크
+    // userId 체크 (status가 A, I, B인 user)
     public int checkUserId(long userId) {
-        String query = "SELECT EXISTS(SELECT user_id from profile where user_id = ?)";
+        String query = "SELECT EXISTS(SELECT user_id from profile where user_id = ? and status not in ('D', 'P'))";
         return this.jdbcTemplate.queryForObject(query, int.class, userId);
     }
 
