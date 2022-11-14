@@ -1,6 +1,7 @@
 package org.cmccx.src.gallery;
 
 import org.cmccx.config.BaseException;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +16,13 @@ public class GalleryService {
 
     private final GalleryProvider galleryProvider;
     private final GalleryDao galleryDao;
+    private final UserProvider userProvider;
     private final JwtService jwtService;
 
-    public GalleryService(GalleryProvider galleryProvider, GalleryDao galleryDao, JwtService jwtService) {
+    public GalleryService(GalleryProvider galleryProvider, GalleryDao galleryDao, UserProvider userProvider, JwtService jwtService) {
         this.galleryProvider = galleryProvider;
         this.galleryDao = galleryDao;
+        this.userProvider = userProvider;
         this.jwtService = jwtService;
     }
 
@@ -28,6 +31,12 @@ public class GalleryService {
         try {
             // 회원 ID 검증 및 추출
             long userId = jwtService.getUserId();
+
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
             // 갤러리명 중복 검사
             boolean isDuplicated = galleryDao.checkGalleryName(userId, name);
@@ -51,9 +60,15 @@ public class GalleryService {
             // 회원 ID 검증 및 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 갤러리-회원 관계 확인
-            boolean isValid = galleryProvider.checkGalleryByUserId(galleryId);
-            if (!isValid) {
+            boolean isValidGallery = galleryProvider.checkGalleryByUserId(galleryId);
+            if (!isValidGallery) {
                 throw new BaseException(INVALID_USER_JWT);
             }
 
@@ -87,9 +102,15 @@ public class GalleryService {
             // 회원 ID 검증 및 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 갤러리-회원 관계 확인
-            boolean isValid = galleryProvider.checkGalleryByUserId(galleryId);
-            if (!isValid) {
+            boolean isValidGallery = galleryProvider.checkGalleryByUserId(galleryId);
+            if (!isValidGallery) {
                 throw new BaseException(INVALID_USER_JWT);
             }
 
@@ -117,9 +138,15 @@ public class GalleryService {
             // 회원 ID 검증 및 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 갤러리-회원 관계 확인
-            boolean isValid = galleryProvider.checkGalleryByUserId(galleryId);
-            if (!isValid) {
+            boolean isValidGallery = galleryProvider.checkGalleryByUserId(galleryId);
+            if (!isValidGallery) {
                 throw new BaseException(INVALID_USER_JWT);
             }
 

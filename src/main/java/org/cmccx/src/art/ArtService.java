@@ -3,6 +3,7 @@ package org.cmccx.src.art;
 import org.cmccx.config.BaseException;
 import org.cmccx.src.art.model.PostArtReq;
 import org.cmccx.src.art.model.PutArtReq;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.FileService;
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.S3Service;
@@ -25,14 +26,16 @@ public class ArtService {
 
     private final ArtProvider artProvider;
     private final ArtDao artDao;
+    private final UserProvider userProvider;
     private final JwtService jwtService;
     private final S3Service s3Service;
     private final FileService fileService;
 
     @Autowired
-    public ArtService(ArtProvider artProvider, ArtDao artDao, JwtService jwtService, S3Service s3Service, FileService fileService) {
+    public ArtService(ArtProvider artProvider, ArtDao artDao, UserProvider userProvider, JwtService jwtService, S3Service s3Service, FileService fileService) {
         this.artProvider = artProvider;
         this.artDao = artDao;
+        this.userProvider = userProvider;
         this.jwtService = jwtService;
         this.s3Service = s3Service;
         this.fileService = fileService;
@@ -45,6 +48,12 @@ public class ArtService {
         try {
             // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
+
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
             // 작품명 중복 검사
             int isDuplicated = artProvider.checkArtTitle(userId, postArtReq.getTitle(), 0);
@@ -121,9 +130,15 @@ public class ArtService {
             // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 작가-작품 관계 확인
-            int isValid = artProvider.checkUserArt(userId, artId);
-            if (isValid == 0){
+            int isValidArt = artProvider.checkUserArt(userId, artId);
+            if (isValidArt == 0){
                 throw new BaseException(INVALID_USER_JWT);
             }
 
@@ -239,6 +254,12 @@ public class ArtService {
             // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 독점 판매 여부 확인
             String status = artProvider.checkArtStatus(artId);
             if (status.equals("E")) {
@@ -274,6 +295,12 @@ public class ArtService {
             // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 삭제
             int result = artDao.deleteAllRecentArts(userId);
 
@@ -287,5 +314,4 @@ public class ArtService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
-
 }
