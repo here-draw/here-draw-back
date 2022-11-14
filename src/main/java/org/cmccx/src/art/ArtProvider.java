@@ -4,6 +4,7 @@ import org.cmccx.config.BaseException;
 import org.cmccx.src.art.model.ArtInfo;
 import org.cmccx.src.art.model.GetArtByArtIdRes;
 import org.cmccx.src.art.model.GetArtsRes;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.ScrollPagination;
 import org.slf4j.Logger;
@@ -21,11 +22,13 @@ public class ArtProvider {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ArtDao artDao;
+    private final UserProvider userProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public ArtProvider(ArtDao artDao, JwtService jwtService) {
+    public ArtProvider(ArtDao artDao, UserProvider userProvider, JwtService jwtService) {
         this.artDao = artDao;
+        this.userProvider = userProvider;
         this.jwtService = jwtService;
     }
 
@@ -164,6 +167,12 @@ public class ArtProvider {
         try {
             // 회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
+
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
             List<ArtInfo> result = artDao.selectRecentArts(userId);
             return result;

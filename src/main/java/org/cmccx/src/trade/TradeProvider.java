@@ -3,6 +3,7 @@ package org.cmccx.src.trade;
 import org.cmccx.config.BaseException;
 import org.cmccx.src.art.model.ArtInfo;
 import org.cmccx.src.trade.model.GetPurchaseHistoryRes;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,19 +12,20 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static org.cmccx.config.BaseResponseStatus.DATABASE_ERROR;
-import static org.cmccx.config.BaseResponseStatus.RESPONSE_ERROR;
+import static org.cmccx.config.BaseResponseStatus.*;
 
 @Service
 public class TradeProvider {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final TradeDao tradeDao;
+    private final UserProvider userProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public TradeProvider(TradeDao tradeDao, JwtService jwtService) {
+    public TradeProvider(TradeDao tradeDao, UserProvider userProvider, JwtService jwtService) {
         this.tradeDao = tradeDao;
+        this.userProvider = userProvider;
         this.jwtService = jwtService;
     }
 
@@ -32,6 +34,12 @@ public class TradeProvider {
         try {
             //회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
+
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
             List<ArtInfo> artList = tradeDao.selectPurchaseHistory(userId);
             GetPurchaseHistoryRes result = new GetPurchaseHistoryRes(artList.size(), artList);

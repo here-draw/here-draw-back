@@ -4,6 +4,7 @@ import org.cmccx.config.BaseException;
 import org.cmccx.src.art.ArtService;
 import org.cmccx.src.chat.ChatProvider;
 import org.cmccx.src.trade.model.PostTradeConfirmReq;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,15 @@ public class TradeService {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final TradeDao tradeDao;
+    private final UserProvider userProvider;
     private final ChatProvider chatProvider;
     private final ArtService artService;
     private final JwtService jwtService;
 
     @Autowired
-    public TradeService(TradeDao tradeDao, ChatProvider chatProvider, ArtService artService, JwtService jwtService) {
+    public TradeService(TradeDao tradeDao, UserProvider userProvider, ChatProvider chatProvider, ArtService artService, JwtService jwtService) {
         this.tradeDao = tradeDao;
+        this.userProvider = userProvider;
         this.chatProvider = chatProvider;
         this.artService = artService;
         this.jwtService = jwtService;
@@ -39,9 +42,15 @@ public class TradeService {
             long userId = jwtService.getUserId();
             long artId = postTradeConfirmReq.getArtId();
 
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
+
             // 채팅방 소유 여부 확인
-            int isValid = chatProvider.checkUserChatRoom(postTradeConfirmReq.getRoomId(), userId);
-            if (isValid == 0) {
+            int isValidChatroom = chatProvider.checkUserChatRoom(postTradeConfirmReq.getRoomId(), userId);
+            if (isValidChatroom == 0) {
                 throw new BaseException(BAD_REQUEST);
             }
 

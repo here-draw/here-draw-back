@@ -6,6 +6,7 @@ import org.cmccx.src.search.model.ArtistInfo;
 import org.cmccx.src.search.model.GetArtistsByKeywordRes;
 import org.cmccx.src.search.model.GetArtsByKeywordRes;
 import org.cmccx.src.search.model.GetPopularArtistsRes;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.cmccx.utils.ScrollPagination;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static org.cmccx.config.BaseResponseStatus.BAD_REQUEST;
 import static org.cmccx.config.BaseResponseStatus.RESPONSE_ERROR;
 
 @Service
@@ -22,11 +24,13 @@ public class SearchProvider {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final SearchDao searchDao;
+    private final UserProvider userProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public SearchProvider(SearchDao searchDao, JwtService jwtService) {
+    public SearchProvider(SearchDao searchDao, UserProvider userProvider, JwtService jwtService) {
         this.searchDao = searchDao;
+        this.userProvider = userProvider;
         this.jwtService = jwtService;
     }
 
@@ -35,6 +39,12 @@ public class SearchProvider {
         try {
             // 회원 ID 검증 및 추출
             long userId = jwtService.getUserId();
+
+            // 유효한 회원인지 확인
+            int isValid = userProvider.checkUserId(userId);
+            if(isValid == 0) {
+                throw new BaseException(BAD_REQUEST);
+            }
 
             List<String> result = searchDao.selectRecentKeywords(userId);
             return result;
@@ -92,17 +102,6 @@ public class SearchProvider {
             throw new BaseException(e.getStatus());
         } catch (Exception e) {
             logger.error("GetArtistsByKeyword", e);
-            throw new BaseException(RESPONSE_ERROR);
-        }
-    }
-
-    /** 작가 검색 결과 개수 반환 **/
-    public int getArtistSearchCount(String keyword) throws BaseException {
-        try {
-            int result = searchDao.getArtistsSearchCount(keyword);
-            return result;
-        } catch (Exception e) {
-            logger.error("GetArtistSearchCount", e);
             throw new BaseException(RESPONSE_ERROR);
         }
     }
