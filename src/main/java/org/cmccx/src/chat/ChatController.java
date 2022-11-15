@@ -33,10 +33,8 @@ public class ChatController {
      * @return BaseResponse<GetChatRoomInfoRes>
      */
     @ResponseBody
-    @PostMapping("/arts/{art-id}")
-    public BaseResponse<GetChatRoomInfoRes> createChatRoom(@PathVariable("art-id") Long artId,
-                                                           @RequestBody @Valid PostChatRoomForArtReq postChatRoomForArtReq) throws BaseException {
-        postChatRoomForArtReq.setArtId(artId);
+    @PostMapping("/arts")
+    public BaseResponse<GetChatRoomInfoRes> createChatRoom(@RequestBody @Valid PostChatRoomForArtReq postChatRoomForArtReq) throws BaseException {
         GetChatRoomInfoRes result = chatService.createChatRoomForArt(postChatRoomForArtReq);
 
         return new BaseResponse<>(result);

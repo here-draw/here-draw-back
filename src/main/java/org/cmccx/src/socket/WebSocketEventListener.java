@@ -1,5 +1,6 @@
 package org.cmccx.src.socket;
 
+import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,40 +10,41 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.util.Map;
+
 @Component
 public class WebSocketEventListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final JwtService jwtService;
     private final SocketService socketService;
 
     @Autowired
-    public WebSocketEventListener(SocketService socketService) {
+    public WebSocketEventListener(JwtService jwtService, SocketService socketService) {
+        this.jwtService = jwtService;
         this.socketService = socketService;
     }
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-//        MessageHeaderAccessor accessor = NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
-//        GenericMessage generic = (GenericMessage) accessor.getHeader("SimpConnectMessage");
-//        Map nativeHeaders = (Map) generic.getHeaders().get("nativeHeaders");
-//        String jwt = (String) nativeHeaders.get("X-ACCESS-TOKEN");
-
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = accessor.getSessionId();
-        accessor.getMessageHeaders();
+        String jwt = (String) accessor.getFirstNativeHeader("X-ACCESS-TOKEN");
 
-        //GenericMessage msg = (GenericMessage) accessor.getMessageHeaders().get("X-ACCESS-TOKEN");
-        System.out.println(sessionId);
-        System.out.println("리스너 동작");
+        // JWT 인증
+        long userId = jwtService.getUserId(jwt);
 
-        //socketService.connectWebsocket(userId);
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+        sessionAttributes.put("userId", userId);
+        accessor.setSessionAttributes(sessionAttributes);
+
+        socketService.connectWebsocket(userId);
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        System.out.println("연결 끊김");
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        //long userId = (long) accessor.getSessionAttributes().get("userId");
-        //socketService.disconnectWebsocket(userId);
+        long userId = (long) accessor.getSessionAttributes().get("userId");
+
+        socketService.disconnectWebsocket(userId);
     }
 }
