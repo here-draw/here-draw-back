@@ -9,8 +9,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
 @Component
 public class StompHandler implements ChannelInterceptor {
     private final JwtService jwtService;
@@ -25,17 +23,7 @@ public class StompHandler implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
         if (accessor.getCommand() == StompCommand.CONNECT) {
-            // String jwt = accessor.getNativeHeader("X-ACCESS-TOKEN").get(0);
-            // JWT 인증
-            // long userId = jwtService.getUserId(jwt);
 
-            Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
-            //sessionAttributes.put("userId", userId);
-            accessor.setSessionAttributes(sessionAttributes);
-
-//            System.out.println("헤더: "+message.getHeaders());
-//            System.out.println("토큰: " + accessor.getMessageHeaders());
-//            System.out.println(accessor.getFirstNativeHeader("X-ACCESS-TOKEN"));
 
         } else if (accessor.getCommand() == StompCommand.SUBSCRIBE) {
             // String jwt = accessor.getNativeHeader("X-ACCESS-TOKEN").get(0);

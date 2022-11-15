@@ -8,6 +8,7 @@ import org.cmccx.src.chat.model.GetChatRoomInfoRes;
 import org.cmccx.src.chat.model.GetExistentChatRoomData;
 import org.cmccx.src.chat.model.PostChatRoomForArtReq;
 import org.cmccx.src.trade.TradeProvider;
+import org.cmccx.src.user.UserProvider;
 import org.cmccx.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +26,17 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatProvider chatProvider;
     private final ChatDao chatDao;
+    private final UserProvider userProvider;
     private final ArtProvider artProvider;
     private final TradeProvider tradeProvider;
     private final JwtService jwtService;
 
     @Autowired
-    public ChatService(SimpMessagingTemplate messagingTemplate, ChatProvider chatProvider, ChatDao chatDao, ArtProvider artProvider, TradeProvider tradeProvider, JwtService jwtService) {
+    public ChatService(SimpMessagingTemplate messagingTemplate, ChatProvider chatProvider, ChatDao chatDao, UserProvider userProvider, ArtProvider artProvider, TradeProvider tradeProvider, JwtService jwtService) {
         this.messagingTemplate = messagingTemplate;
         this.chatProvider = chatProvider;
         this.chatDao = chatDao;
+        this.userProvider = userProvider;
         this.artProvider = artProvider;
         this.tradeProvider = tradeProvider;
         this.jwtService = jwtService;
@@ -57,10 +60,10 @@ public class ChatService {
              long userId = jwtService.getUserId();
 
             // 채팅 상대 ID 유효성 검사
-//            int isValidUser = userDao.checkUserId(postChatRoomForArtReq.getArtistId());
-//            if (isValidUser == 0) {
-//                throw new BaseException(FAILED_ACCESS_USER);    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
-//            }
+            int isValidUser = userProvider.checkUserId(postChatRoomForArtReq.getArtistId());
+            if (isValidUser == 0) {
+                throw new BaseException(FAILED_ACCESS_USER);
+            }
 
             // 작품 ID 유효성 검사
             int isValidArt = artProvider.checkArt(postChatRoomForArtReq.getArtId());
@@ -109,10 +112,11 @@ public class ChatService {
             //회원 검증 및 ID 추출
             long userId = jwtService.getUserId();
 
-//            // 채팅 상대 ID 유효성 검사
-//            if (isValidUser == 0) {
-//                throw new BaseException(FAILED_ACCESS_USER);    // 탈퇴 또는 차단된 사용자입니다. 아니면 개별 에러?
-//            }
+            // 채팅 상대 ID 유효성 검사
+            int isValidUser = userProvider.checkUserId(postChatRoomForArtReq.getArtistId());
+            if (isValidUser == 0) {
+                throw new BaseException(FAILED_ACCESS_USER);
+            }
 
             // DM 채팅방 존재 여부 확인
             GetExistentChatRoomData chatRoom = chatProvider.checkExistentChatRoom(RoomType.DIRECT_MESSAGE, 0, userId, postChatRoomForArtReq.getArtistId());

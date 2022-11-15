@@ -141,7 +141,7 @@ public class SocketService {
             chatService.registerMessage(messageInfo);
 
             // 메세지 전송
-            messagingTemplate.convertAndSend("sub/chat/message" + roomId, messageInfo);
+            messagingTemplate.convertAndSend("sub/chat/room" + roomId, messageInfo);
 
             // 상대방이 나간 경우, 채팅방 활성화
             int isContactUserValid = chatProvider.checkUserChatRoom(roomId, receiverId);

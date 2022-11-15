@@ -69,4 +69,19 @@ public class JwtService {
         return claims.getBody().get("userId", Long.class);
     }
 
+    /*
+    JWT에서 userId 추출
+    @return long
+    @throws BaseException
+     */
+    public long getUserId(String accessToken) {
+        Jws<Claims> claims;
+
+        claims = Jwts.parser()
+                .setSigningKey(Secret.JWT_SECRET_KEY)
+                .parseClaimsJws(accessToken);
+
+        // userId 추출
+        return claims.getBody().get("userId", Long.class);
+    }
 }
