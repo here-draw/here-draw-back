@@ -18,14 +18,15 @@ public class GetArtByArtIdRes {
     private int additionalCharge;
     private String simpleDescription;
     private String description;
-    private int like;
+    private int likeCount;
     private List<String> filetype;
     private List<String> copyright;
     private List<String> tag;
     private boolean sales;
+    private boolean likes;
     private boolean myArt;
 
-    public GetArtByArtIdRes(long userId, String artImage, int width, int height, String title, int price, String exclusive, int additionalCharge,String simpleDescription, String description, int like, String status) {
+    public GetArtByArtIdRes(long userId, String artImage, int width, int height, String title, int price, String exclusive, int additionalCharge, String simpleDescription, String description, int likeCount, boolean likes, String status) {
         this.artistId = userId;
         this.artImage = artImage;
         this.width = width;
@@ -36,8 +37,9 @@ public class GetArtByArtIdRes {
         this.additionalCharge = additionalCharge;
         this.simpleDescription = simpleDescription;
         this.description = description;
-        this.like = like;
+        this.likeCount = likeCount;
         this.sales = isSales(status);
+        this.likes = likes;
     }
 
     private boolean isSales(String status){

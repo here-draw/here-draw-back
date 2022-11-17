@@ -143,7 +143,7 @@ public class ArtProvider {
             }
 
             // 작품 상세 정보 조회
-            GetArtByArtIdRes result = artDao.selectArtByArtId(artId);
+            GetArtByArtIdRes result = artDao.selectArtByArtId(userId, artId);
 
             // 최근 본 작품 등록
             artDao.insertRecentArt(userId, artId);
