@@ -109,14 +109,19 @@ public class ArtDao {
     }
 
     /** 작품 상세 정보 조회 **/
-    public GetArtByArtIdRes selectArtByArtId(long artId){
+    public GetArtByArtIdRes selectArtByArtId(long userId, long artId){
         // 작품 및 작가 정보 조회
-        String infoQuery = "SELECT art.user_id, art_image, image_width, image_height, title, price, exclusive_flag, additional_charge, simple_description, art.description, IFNULL(like_art, 0) AS like_art, status " +
+        String infoQuery = "SELECT art.user_id, art_image, image_width, image_height, title, price, exclusive_flag, additional_charge, simple_description, art.description, IFNULL(like_art, 0) AS like_art, IF(likes IS NULL, FALSE, TRUE) AS user_likes, status " +
                             "FROM art " +
                             "LEFT JOIN (SELECT COUNT(*) AS like_art, art_id " +
                             "FROM bookmark " +
                             "GROUP BY art_id) like_art_tb ON like_art_tb.art_id = art.art_id " +
+                            "LEFT JOIN (SELECT bookmark_id AS likes, art_id, user_id " +
+                            "FROM bookmark INNER JOIN gallery g on bookmark.gallery_id = g.gallery_id " +
+                            "WHERE user_id = ? AND art_id = ?) like_user_tb ON like_art_tb.art_id = art.art_id " +
                             "WHERE art.art_id = ? AND status NOT IN ('B', 'D', 'N')";
+
+        Object[] params = new Object[] {userId, artId, artId};
 
         GetArtByArtIdRes result =  this.jdbcTemplate.queryForObject(infoQuery,
                                     (rs, rowNum) -> new GetArtByArtIdRes(
@@ -131,8 +136,9 @@ public class ArtDao {
                                             rs.getString("simple_description"),
                                             rs.getString("art.description"),
                                             rs.getInt("like_art"),
+                                            rs.getBoolean("user_likes"),
                                             rs.getString("status")),
-                                    artId);
+                                    params);
 
         // 파일 유형 조회
         String fileQuery = "SELECT type FROM file " +
@@ -160,7 +166,8 @@ public class ArtDao {
         String query = "SELECT recent_art.art_id, a.user_id, art_image " +
                         "FROM recent_art " +
                         "INNER JOIN art a ON recent_art.art_id = a.art_id " +
-                        "WHERE recent_art.user_id = ? AND a.status IN ('S', 'F', 'E')";
+                        "WHERE recent_art.user_id = ? AND a.status IN ('S', 'F', 'E') " +
+                        "ORDER BY recent_art.updated_at DESC";
 
         return this.jdbcTemplate.query(query,
                 (rs, rowNum) -> new ArtInfo(
@@ -268,8 +275,9 @@ public class ArtDao {
 
     /** 최근 본 작품 등록 **/
     public void insertRecentArt(long userId, long artId) {
-        String query = "INSERT INTO recent_art(user_id, art_id) VALUES (?, ?)";
-        this.jdbcTemplate.update(query, userId, artId);
+        String query = "INSERT INTO recent_art(user_id, art_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE " +
+                        "user_id = ?";
+        this.jdbcTemplate.update(query, userId, artId, userId);
     }
 
     /** 작품 수정 **/
