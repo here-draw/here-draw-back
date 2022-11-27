@@ -327,4 +327,14 @@ public class UserService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    /** 애플 탈퇴 **/
+    @Transactional(rollbackFor = Exception.class)
+    public void revokeByApple(String authorizationCode) {
+        try {
+            appleService.revoke(authorizationCode);
+        } catch (Exception e) {
+            logger.error("RevokeByApple Fail(Apple Service) Fail", e);
+        }
+    }
 }

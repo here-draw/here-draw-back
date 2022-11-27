@@ -375,4 +375,26 @@ public class UserController {
 
         return new BaseResponse<>(result);
     }
+
+    /**
+     * 애플 탈퇴 API
+     * [POST] /users/apple/revoke
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PostMapping("/apple/revoke")
+    public BaseResponse<String> revokeByApple(@RequestBody @Valid AppleWithdrawalReq appleWithdrawalReq) throws BaseException {
+        try {
+            long userIdByJwt = jwtService.getUserId();
+            userService.revokeByApple(appleWithdrawalReq.getAuthorizationCode());
+
+            String result = "회원 탈퇴에 성공하였습니다.";
+            return new BaseResponse<>(result);
+        } catch(BaseException e) {
+            throw new BaseException(e.getStatus());
+        } catch(Exception e) {
+            logger.error("RevokeByApple Error", e);
+            throw new BaseException(RESPONSE_ERROR);
+        }
+    }
 }

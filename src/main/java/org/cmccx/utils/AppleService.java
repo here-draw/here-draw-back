@@ -1,27 +1,59 @@
 package org.cmccx.utils;
 
+import org.cmccx.src.user.model.AppleToken;
+import org.cmccx.config.secret.Secret;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import org.cmccx.config.BaseException;
 import static org.cmccx.config.BaseResponseStatus.*;
+
 import org.springframework.stereotype.Service;
+
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.RSAPublicKeySpec;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 import java.util.*;
 
 @Service
 public class AppleService {
+    private String KEY_ID = Secret.KEY_ID;
+    private String TEAM_ID = Secret.TEAM_ID;
+    private String CLIENT_ID = Secret.CLIENT_ID;
+    private String KEY_PATH = Secret.KEY_PATH;
 
     @Getter
     @Setter
@@ -95,5 +127,74 @@ public class AppleService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public String createClientSecret() throws IOException {
+        Date expirationDate = Date.from(LocalDateTime.now().plusDays(30).atZone(ZoneId.systemDefault()).toInstant());
+
+        return Jwts.builder()
+                .setHeaderParam("kid", KEY_ID)
+                .setHeaderParam("alg", "ES256")
+                .setIssuer(TEAM_ID)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(expirationDate)
+                .setAudience("https://appleid.apple.com")
+                .setSubject(CLIENT_ID)
+                .signWith(SignatureAlgorithm.ES256, getPrivateKey())
+                .compact();
+    }
+
+    private PrivateKey getPrivateKey() throws IOException {
+        ClassPathResource resource = new ClassPathResource(KEY_PATH);
+        String privateKey = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        Reader pemReader = new StringReader(privateKey);
+        PEMParser pemParser = new PEMParser(pemReader);
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+        PrivateKeyInfo object = (PrivateKeyInfo) pemParser.readObject();
+        return converter.getPrivateKey(object);
+    }
+
+    public AppleToken GenerateAuthToken(String authorizationCode) throws IOException {
+        RestTemplate restTemplate = new RestTemplateBuilder().build();
+        String authUrl = "https://appleid.apple.com/auth/token";
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("code", authorizationCode);
+        params.add("client_id", CLIENT_ID);
+        params.add("client_secret", createClientSecret());
+        params.add("grant_type", "authorization_code");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+
+        try {
+            ResponseEntity<AppleToken> response = restTemplate.postForEntity(authUrl, httpEntity, AppleToken.class);
+            return response.getBody();
+        } catch (HttpClientErrorException e) {
+            throw new IllegalArgumentException("GenerateAuthToken Error");
+        }
+    }
+
+    public void revoke(String authorizationCode) throws IOException {
+        AppleToken appleAuthToken = GenerateAuthToken(authorizationCode);
+
+        if (appleAuthToken.getAccessToken() != null) {
+            RestTemplate restTemplate = new RestTemplateBuilder().build();
+            String revokeUrl = "https://appleid.apple.com/auth/revoke";
+
+            LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("client_id", CLIENT_ID);
+            params.add("client_secret", createClientSecret());
+            params.add("token", appleAuthToken.getAccessToken());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+
+            restTemplate.postForEntity(revokeUrl, httpEntity, String.class);
+        }
     }
 }
