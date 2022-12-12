@@ -71,6 +71,12 @@ public class ChatService {
                 throw new BaseException(FAILED_ACCESS_ART);
             }
 
+            // 작가-작품 관계 확인
+            int isValidArtistArt = artProvider.checkUserArt(userId, postChatRoomForArtReq.getArtId());
+            if (isValidArt == 0){
+                throw new BaseException(INVALID_ART_ARTIST);
+            }
+
             // 작품 채팅방 존재 여부 확인
             GetExistentChatRoomData chatRoom = chatProvider.checkExistentChatRoom(RoomType.INQUIRY, postChatRoomForArtReq.getArtId(), userId, postChatRoomForArtReq.getArtistId());
             // 채팅방이 있는 경우

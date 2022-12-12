@@ -55,6 +55,7 @@ public enum BaseResponseStatus {
     DUPLICATED_REPORT(false, 2508, "이미 신고되었습니다."),
     FAIL_EXIT_CHATROOM(false, 2509, "거래가 완료되지 않은 채팅방입니다."),
     INCLUDED_FORBIDDEN_WORD(false, 2510, "보낼 수 없는 단어입니다."),
+    INVALID_ART_ARTIST(false, 2511, "해당 작가의 작품을 찾을 수 없습니다."),
 
 
     /**
