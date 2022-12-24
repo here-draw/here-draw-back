@@ -74,12 +74,20 @@ public class JwtService {
     @return long
     @throws BaseException
      */
-    public long getUserId(String accessToken) {
+    public long getUserId(String accessToken) throws BaseException {
         Jws<Claims> claims;
 
-        claims = Jwts.parser()
-                .setSigningKey(Secret.JWT_SECRET_KEY)
-                .parseClaimsJws(accessToken);
+        if(accessToken == null || accessToken.length() == 0){
+            throw new BaseException(EMPTY_JWT);
+        }
+
+        try{
+            claims = Jwts.parser()
+                    .setSigningKey(Secret.JWT_SECRET_KEY)
+                    .parseClaimsJws(accessToken);
+        } catch (Exception ignored) {
+            throw new BaseException(INVALID_JWT);
+        }
 
         // userId 추출
         return claims.getBody().get("userId", Long.class);
