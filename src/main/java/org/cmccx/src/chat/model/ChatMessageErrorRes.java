@@ -2,12 +2,14 @@ package org.cmccx.src.chat.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
-public class SocketChatRoom {
-    private long userId;
-    private long roomId;
+@NoArgsConstructor
+public class ChatMessageErrorRes {
+    private int code;
+    private String message;
 }
